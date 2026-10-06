@@ -108,20 +108,20 @@ export function useSkillRecordingWorkflow({
         const previewText = previewLines.join("\n");
         const truncationNotice =
           data.skillContent.split("\n").length > 20
-            ? `\n\n... (共 ${
-                data.skillContent.split("\n").length
-              } 行，完整内容将在确认后保存)`
+            ? `\n\n${t("skillRecord.previewTruncated", {
+                count: data.skillContent.split("\n").length,
+              })}`
             : "";
 
         chatStore.appendPushMessage(
-          `✅ 录制完成！已生成 ${data.steps ?? 0} 个回放步骤。\n\n` +
-            `📝 **技能脚本预览：**\n\n${previewText}${truncationNotice}\n\n` +
-            `回复"确认"即可应用此技能，之后可以一键回放相同操作流程。`,
+          `${t("skillRecord.recordingDoneMessage", { steps: data.steps ?? 0 })}\n\n` +
+            `${t("skillRecord.scriptPreviewHeading")}\n\n${previewText}${truncationNotice}\n\n` +
+            t("skillRecord.confirmToApplyHint"),
         );
       } else {
         chatStore.appendPushMessage(
-          `✅ 录制完成！已生成 ${data.steps ?? 0} 个回放步骤。\n\n` +
-            `⚠️ 技能脚本生成失败，请稍后重试或手动生成。`,
+          `${t("skillRecord.recordingDoneMessage", { steps: data.steps ?? 0 })}\n\n` +
+            t("skillRecord.scriptGenerationFailedMessage"),
         );
       }
 
@@ -178,8 +178,9 @@ export function useSkillRecordingWorkflow({
 
       // Push confirmation message to chat
       chatStore.appendPushMessage(
-        `🎉 技能 **${result.name || pendingSkillName}** 已成功应用！\n\n` +
-          `之后可以通过聊天输入相关指令，一键回放相同的浏览器操作流程。`,
+        t("skillRecord.skillAppliedMessage", {
+          name: result.name || pendingSkillName,
+        }),
       );
 
       antMessage.success(
