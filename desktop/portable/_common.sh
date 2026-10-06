@@ -11,8 +11,15 @@ GREEN_RELEASE="${GREEN_ROOT}/release"
 # Pin a known-good python-build-standalone release (override with PBS_TAG / PBS_PY).
 PBS_TAG="${PBS_TAG:-20251209}"
 PBS_PY="${PBS_PY:-3.12.12}"
-# Prefer npmmirror mirror; override with PBS_BASE_URL for GitHub upstream.
-PBS_BASE_URL="${PBS_BASE_URL:-https://registry.npmmirror.com/-/binary/python-build-standalone/${PBS_TAG}}"
+# GitHub upstream by default; OCTOP_USE_CN_MIRRORS=1 switches to npmmirror.
+# PBS_BASE_URL always wins.
+case "${OCTOP_USE_CN_MIRRORS:-0}" in
+  1|true|TRUE|yes|on)
+    _PBS_DEFAULT_BASE="https://registry.npmmirror.com/-/binary/python-build-standalone/${PBS_TAG}" ;;
+  *)
+    _PBS_DEFAULT_BASE="https://github.com/astral-sh/python-build-standalone/releases/download/${PBS_TAG}" ;;
+esac
+PBS_BASE_URL="${PBS_BASE_URL:-${_PBS_DEFAULT_BASE}}"
 
 ALL_PLATS=(
   darwin-arm64

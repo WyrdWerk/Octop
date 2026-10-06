@@ -126,13 +126,15 @@ metadata:
 详细步骤以文档为准：https://docs.octop.cloud/guide/quickstart 。可以同时给出一键安装：
 
 ```bash
-# macOS / Linux
-curl -fsSL https://finnie-1258344699.cos.ap-guangzhou.myqcloud.com/octop/install.sh | bash
+# macOS / Linux — this build (github.com/WyrdWerk/Octop), installed from source
+git clone https://github.com/WyrdWerk/Octop.git && cd Octop
+bash scripts/install.sh --from-source .
 ```
 
 ```powershell
 # Windows PowerShell
-irm https://finnie-1258344699.cos.ap-guangzhou.myqcloud.com/octop/install.ps1 | iex
+git clone https://github.com/WyrdWerk/Octop.git; cd Octop
+powershell -ExecutionPolicy Bypass -File scripts\install.ps1 -FromSource -SourceDir .
 ```
 
 装好后新开终端，再：

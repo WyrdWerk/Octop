@@ -37,6 +37,25 @@ _DOCKER_CE_SOURCES = (
     "https://mirrors.cernet.edu.cn/docker-ce",
 )
 _OFFICIAL_SOURCE = "https://download.docker.com"
+# Mainland-China mirrors (docker-ce sources above + Tencent registry mirror)
+# are only used when explicitly opted in.
+_USE_CN_MIRRORS_ENV = "OCTOP_USE_CN_MIRRORS"
+
+
+def cn_mirrors_enabled() -> bool:
+    return (os.environ.get(_USE_CN_MIRRORS_ENV) or "").strip().lower() in {
+        "1",
+        "true",
+        "yes",
+        "on",
+    }
+
+
+def docker_ce_sources() -> tuple[str, ...]:
+    """Sources raced for the docker-ce install (official only by default)."""
+    return _DOCKER_CE_SOURCES if cn_mirrors_enabled() else (_OFFICIAL_SOURCE,)
+
+
 _TENCENT_MIRROR_HOST = "mirror.ccs.tencentyun.com"
 _TENCENT_MIRROR_URL = f"https://{_TENCENT_MIRROR_HOST}/"
 _DAEMON_JSON = Path("/etc/docker/daemon.json")
@@ -142,7 +161,7 @@ async def select_download_source() -> tuple[str | None, float | None]:
     """
     best_source: str | None = None
     best_delay: float | None = None
-    for source in _DOCKER_CE_SOURCES:
+    for source in docker_ce_sources():
         delay = await _measure_source_delay(source)
         if delay is None:
             continue
@@ -368,8 +387,9 @@ async def auto_install_docker_stream(*, locale: str = "en") -> AsyncIterator[str
             yield _log(locale, hint_key)
         return
 
-    # 3) Registry mirror: only probe reachability, only for this fresh install.
-    if await _probe_tencent_mirror():
+    # 3) Registry mirror: only probe reachability, only for this fresh install,
+    #    and only when China mirrors are opted in (OCTOP_USE_CN_MIRRORS=1).
+    if cn_mirrors_enabled() and await _probe_tencent_mirror():
         yield _log(locale, "docker_mirror_reachable")
         if _merge_registry_mirror(_DAEMON_JSON, _TENCENT_MIRROR_URL):
             yield _log(locale, "docker_mirror_configured")

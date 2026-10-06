@@ -1,4 +1,4 @@
-"""Race COS, Hugging Face, and hf-mirror, then download from the winner."""
+"""Race download sources (Hugging Face; COS / hf-mirror when opted in), then download."""
 
 from __future__ import annotations
 
@@ -30,6 +30,7 @@ COS_PREFIX = "models/embedding"
 COS_MANIFEST_NAME = "files.json"
 COS_REVISION = "cos-mirror"
 _COS_BASE_ENV = "OCTOP_ONNX_COS_BASE"
+_USE_CN_MIRRORS_ENV = "OCTOP_USE_CN_MIRRORS"
 
 _PROBE_TIMEOUT_S = 4.0
 _USER_AGENT = "octop-onnx-download"
@@ -100,33 +101,57 @@ def cos_local_model_dir(dest_root: Path, model_name: str) -> Path:
     return dest_root / COS_PREFIX / model_name.strip().strip("/")
 
 
+def cn_mirrors_enabled() -> bool:
+    """``OCTOP_USE_CN_MIRRORS=1`` opts in to mainland-China download mirrors."""
+    return (os.environ.get(_USE_CN_MIRRORS_ENV) or "").strip().lower() in {
+        "1",
+        "true",
+        "yes",
+        "on",
+    }
+
+
 def build_download_candidates(model_name: str) -> list[DownloadCandidate]:
-    """Build COS + official HF + hf-mirror candidates."""
+    """Build download candidates: official Hugging Face by default.
+
+    The Tencent COS bucket and hf-mirror.com are China-region mirrors and are
+    only raced when ``OCTOP_USE_CN_MIRRORS=1``. Setting ``OCTOP_ONNX_COS_BASE``
+    explicitly (e.g. a self-hosted bucket) also enables the COS candidate.
+    """
     hf_repo = _hf_repo_id(model_name)
     probe_file = "config.json"
-    return [
-        DownloadCandidate(
-            kind="cos",
-            probe_url=cos_file_url(model_name, probe_file),
-            hf_endpoint="",
-            hf_repo=hf_repo,
-            model_name=model_name,
-        ),
+    cn = cn_mirrors_enabled()
+    out: list[DownloadCandidate] = []
+    if cn or os.environ.get(_COS_BASE_ENV):
+        out.append(
+            DownloadCandidate(
+                kind="cos",
+                probe_url=cos_file_url(model_name, probe_file),
+                hf_endpoint="",
+                hf_repo=hf_repo,
+                model_name=model_name,
+            )
+        )
+    out.append(
         DownloadCandidate(
             kind="hf",
             probe_url=f"{HF_ENDPOINT_OFFICIAL}/{hf_repo}/resolve/main/{probe_file}",
             hf_endpoint=HF_ENDPOINT_OFFICIAL,
             hf_repo=hf_repo,
             model_name=model_name,
-        ),
-        DownloadCandidate(
-            kind="hf-mirror",
-            probe_url=f"{HF_ENDPOINT_MIRROR}/{hf_repo}/resolve/main/{probe_file}",
-            hf_endpoint=HF_ENDPOINT_MIRROR,
-            hf_repo=hf_repo,
-            model_name=model_name,
-        ),
-    ]
+        )
+    )
+    if cn:
+        out.append(
+            DownloadCandidate(
+                kind="hf-mirror",
+                probe_url=f"{HF_ENDPOINT_MIRROR}/{hf_repo}/resolve/main/{probe_file}",
+                hf_endpoint=HF_ENDPOINT_MIRROR,
+                hf_repo=hf_repo,
+                model_name=model_name,
+            )
+        )
+    return out
 
 
 def probe_source(url: str, timeout_s: float = _PROBE_TIMEOUT_S) -> float:
