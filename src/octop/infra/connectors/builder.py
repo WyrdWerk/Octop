@@ -5,7 +5,7 @@ from __future__ import annotations
 import re
 import secrets
 from typing import Any
-from urllib.parse import quote, urlsplit, urlunsplit
+from urllib.parse import parse_qsl, quote, urlencode, urlsplit, urlunsplit
 
 from octop.config import OctopConfig
 from octop.infra.connectors.catalog import (
@@ -23,6 +23,12 @@ from octop.infra.utils.ulid import new_ulid
 _MCP_STREAMABLE_HTTP_ACCEPT = "application/json, text/event-stream"
 
 DIDI_MCP_BASE_URL = "https://mcp.didichuxing.com/mcp-servers"
+
+# Composio MCP (https://docs.composio.dev/docs/mcp-quickstart):
+# ``https://backend.composio.dev/v3/mcp/<SERVER_ID>?user_id=<USER_ID>`` with
+# an ``x-api-key: <COMPOSIO_API_KEY>`` header.
+COMPOSIO_MCP_BASE_URL = "https://backend.composio.dev/v3/mcp"
+_COMPOSIO_SERVER_ID_RE = re.compile(r"^[A-Za-z0-9_-]{1,128}$")
 
 
 def _mcp_http_headers() -> dict[str, str]:
@@ -53,6 +59,54 @@ def normalize_weknora_base_url(raw: str) -> str:
     if not path.endswith("/api/v1"):
         path = f"{path}/api/v1"
     return urlunsplit((parsed.scheme, parsed.netloc, path, "", ""))
+
+
+def build_composio_mcp_url(
+    *,
+    server_id: str = "",
+    mcp_url: str = "",
+    user_id: str = "",
+) -> str:
+    """Return the Composio MCP endpoint for *server_id* (or an explicit URL).
+
+    An explicit ``mcp_url`` wins over ``server_id``. ``user_id`` is appended as
+    a query parameter unless the URL already carries one.
+    """
+    override = mcp_url.strip()
+    if override:
+        url = validate_mcp_http_url(override)
+    else:
+        sid = server_id.strip()
+        if not sid:
+            raise ValueError("server_id or mcp_url is required for Composio")
+        if not _COMPOSIO_SERVER_ID_RE.match(sid):
+            raise ValueError("server_id may only contain letters, digits, '-' and '_'")
+        url = f"{COMPOSIO_MCP_BASE_URL}/{sid}"
+    uid = user_id.strip()
+    if not uid:
+        return url
+    parsed = urlsplit(url)
+    query = parse_qsl(parsed.query, keep_blank_values=True)
+    if any(key == "user_id" for key, _ in query):
+        return url
+    query.append(("user_id", uid))
+    return urlunsplit(
+        (parsed.scheme, parsed.netloc, parsed.path, urlencode(query), parsed.fragment)
+    )
+
+
+def apply_connector_owner_defaults(
+    kind: str,
+    credentials: dict[str, Any],
+    *,
+    username: str | None,
+) -> dict[str, Any]:
+    """Fill per-user defaults the client did not send (e.g. Composio ``user_id``)."""
+    if kind != "composio" or not username:
+        return credentials
+    if str(credentials.get("user_id") or "").strip():
+        return credentials
+    return {**credentials, "user_id": username}
 
 
 def mcp_server_name(kind: str, instance_id: str) -> str:
@@ -111,6 +165,17 @@ def _build_remote_spec(entry: ConnectorCatalogEntry, creds: dict[str, Any]) -> d
             "transport": "http",
             "url": f"{DIDI_MCP_BASE_URL}?key={quote(api_key, safe='')}",
             "headers": _mcp_http_headers(),
+        }
+    if entry.kind == "composio":
+        api_key = str(creds.get("api_key") or "").strip()
+        return {
+            "transport": "http",
+            "url": build_composio_mcp_url(
+                server_id=str(creds.get("server_id") or ""),
+                mcp_url=str(creds.get("mcp_url") or ""),
+                user_id=str(creds.get("user_id") or ""),
+            ),
+            "headers": {**_mcp_http_headers(), "x-api-key": api_key},
         }
     if entry.kind == "dify":
         url = validate_mcp_http_url(str(creds.get("mcp_url") or ""))
@@ -447,6 +512,23 @@ def validate_create_credentials(
             if ids:
                 out["knowledge_base_ids"] = list(dict.fromkeys(ids))
             return out
+        if entry.kind == "composio":
+            api_key = str(credentials.get("api_key") or "").strip()
+            if not api_key:
+                raise ValueError("api_key is required for Composio")
+            server_id = str(credentials.get("server_id") or "").strip()
+            mcp_url = str(credentials.get("mcp_url") or "").strip()
+            user_id = str(credentials.get("user_id") or "").strip()
+            # Validates server_id / mcp_url (raises ValueError on bad input).
+            build_composio_mcp_url(server_id=server_id, mcp_url=mcp_url, user_id=user_id)
+            out = {"api_key": api_key}
+            if server_id:
+                out["server_id"] = server_id
+            if mcp_url:
+                out["mcp_url"] = validate_mcp_http_url(mcp_url)
+            if user_id:
+                out["user_id"] = user_id
+            return out
         if entry.kind == "dify":
             mcp_url = validate_mcp_http_url(str(credentials.get("mcp_url") or ""))
             if "/mcp/server/" not in mcp_url or not mcp_url.rstrip("/").endswith("/mcp"):
@@ -474,7 +556,7 @@ def _redact_mcp_configs_for_log(configs: dict[str, Any]) -> dict[str, Any]:
         headers = entry.get("headers")
         if isinstance(headers, dict):
             redacted = dict(headers)
-            for key in ("Authorization", "authorization"):
+            for key in ("Authorization", "authorization", "x-api-key", "X-API-Key"):
                 if key in redacted:
                     redacted[key] = "***"
             entry["headers"] = redacted

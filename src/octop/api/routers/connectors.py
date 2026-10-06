@@ -19,6 +19,7 @@ from octop.api.deps import current_user, get_server, require_permission
 from octop.i18n import tr
 from octop.infra.auth.sso.redirect_after import sanitize_redirect_after
 from octop.infra.connectors.builder import (
+    apply_connector_owner_defaults,
     mcp_server_name,
     normalize_weiyun_mcp_token,
     validate_create_credentials,
@@ -738,7 +739,9 @@ async def create_instance(
         raise OctopError(ErrorCode.CONNECTOR_INVALID_CREDENTIALS, "description is required")
     if repo.name_exists(user.id, display_name) or _custom_name_exists(svc, user.id, display_name):
         _raise_name_taken(display_name)
-    cred_input = dict(body.credentials)
+    cred_input = apply_connector_owner_defaults(
+        body.kind, dict(body.credentials), username=getattr(user, "username", None)
+    )
 
     try:
         cred_payload = await _prepare_credentials(
@@ -1042,7 +1045,6 @@ async def test_credentials(
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
     """Validate credentials before creating an instance (no persistence)."""
-    del user
     entry = get_catalog_entry(body.kind)
     if entry is None:
         raise OctopError(ErrorCode.CONNECTOR_KIND_UNSUPPORTED, f"unknown kind {body.kind!r}")
@@ -1051,7 +1053,9 @@ async def test_credentials(
     try:
         cred_payload = await prepare_probe_credentials(
             body.kind,
-            body.credentials,
+            apply_connector_owner_defaults(
+                body.kind, dict(body.credentials), username=getattr(user, "username", None)
+            ),
             full_prepare=lambda k, c: _prepare_credentials(k, c, server.services.settings_repo),
         )
     except ValueError as exc:

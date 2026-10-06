@@ -24,7 +24,8 @@ async def env(env_with_agent):
     yield env_with_agent
 
 
-async def test_catalog(env):
+async def test_catalog(env, monkeypatch):
+    monkeypatch.setenv("OCTOP_CONNECTOR_ALLOWLIST", "*")
     c, _, auth, _ = env
     r = await c.get("/api/connectors/catalog", headers=auth)
     assert r.status_code == 200
@@ -446,7 +447,8 @@ async def test_patch_instance_status(env):
     assert r2.json()["status"] == "disabled"
 
 
-async def test_catalog_weknora_dify_last(env):
+async def test_catalog_weknora_dify_last(env, monkeypatch):
+    monkeypatch.setenv("OCTOP_CONNECTOR_ALLOWLIST", "*")
     c, _, auth, _ = env
     r = await c.get("/api/connectors/catalog", headers=auth)
     assert r.status_code == 200
@@ -457,6 +459,18 @@ async def test_catalog_weknora_dify_last(env):
     assert kinds.index("wecom-cli") < kinds.index("dify")
     assert kinds.index("didi") < kinds.index("weknora")
     assert kinds[-2:] == ["weknora", "dify"]
+
+
+async def test_catalog_default_allowlist_is_global(env, monkeypatch):
+    monkeypatch.delenv("OCTOP_CONNECTOR_ALLOWLIST", raising=False)
+    c, _, auth, _ = env
+    r = await c.get("/api/connectors/catalog", headers=auth)
+    assert r.status_code == 200
+    kinds = [e["kind"] for e in r.json()]
+    assert kinds[0] == "composio"
+    assert "notion" in kinds
+    assert "tencent-docs" not in kinds
+    assert "feishu-cli" not in kinds
 
 
 async def test_install_cli_forbidden_for_non_admin(env):
