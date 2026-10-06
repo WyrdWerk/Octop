@@ -1,7 +1,11 @@
 id: unit-convert
-version: 0.1.0
+version: 0.1.1
 name: 单位换算
 description: 长度、质量与温度单位互转
+i18n:
+  en:
+    name: Unit Converter
+    description: Convert length, mass and temperature units
 icon: icon.svg
 group: tools
 kind: tool

@@ -31,6 +31,7 @@ from octop.infra.utils.json_file import (
     read_json_object,
     write_json_atomic,
 )
+from octop.infra.utils.region_defaults import hidden_plugins, is_hidden
 
 logger = logging.getLogger(__name__)
 
@@ -130,6 +131,33 @@ def _assert_zip_magic(archive: Path) -> None:
 def _read_plugin_yaml(plugin_dir: Path) -> dict[str, Any]:
     raw = yaml.safe_load((plugin_dir / "plugin.yaml").read_text(encoding="utf-8"))
     return raw if isinstance(raw, dict) else {}
+
+
+def localized_plugin_text(
+    plugin_dir: Path,
+    manifest: PluginManifest,
+    locale: str | None,
+) -> tuple[str, str]:
+    """Return ``(name, description)`` for *locale* from ``plugin.yaml``.
+
+    Optional ``i18n: {<locale>: {name, description}}`` overrides the manifest
+    strings; missing locale or keys fall back to ``name`` / ``description``.
+    """
+    name, description = manifest.name, manifest.description
+    if not locale:
+        return name, description
+    try:
+        block = _read_plugin_yaml(plugin_dir).get("i18n")
+    except Exception:
+        return name, description
+    if not isinstance(block, dict):
+        return name, description
+    entry = block.get(locale.split("-")[0].lower())
+    if not isinstance(entry, dict):
+        return name, description
+    loc_name = str(entry.get("name") or "").strip() or name
+    loc_desc = str(entry.get("description") or "").strip() or description
+    return loc_name, loc_desc
 
 
 def parse_plugin_ui_meta(plugin_dir: Path) -> dict[str, str] | None:
@@ -318,13 +346,21 @@ class PluginManager:
             return dest
         return None
 
-    def list_market(self) -> list[dict[str, Any]]:
+    def list_market(self, *, locale: str | None = None) -> list[dict[str, Any]]:
         """List marketplace catalog entries (in-tree today; remote API later)."""
         root = self.market_root()
         out: list[dict[str, Any]] = []
         if not root.is_dir():
             return out
+        # Region-specific catalog plugins (OCTOP_PLUGIN_HIDDEN) are hidden from
+        # the market unless already installed, so admins can still update them.
+        hidden = hidden_plugins()
         for plugin_dir in discover_plugin_dirs(root):
+            if (
+                is_hidden(plugin_dir.name, hidden)
+                and not (self._plugins_dir / plugin_dir.name).is_dir()
+            ):
+                continue
             try:
                 manifest = PluginManifest.load(plugin_dir / "plugin.yaml")
             except Exception as exc:
@@ -336,6 +372,7 @@ class PluginManager:
                     },
                 )
                 continue
+            name, description = localized_plugin_text(plugin_dir, manifest, locale)
             installed_dir = self.plugin_dir(manifest.id)
             installed_version = (
                 None if installed_dir is None else _read_installed_version(installed_dir)
@@ -344,9 +381,9 @@ class PluginManager:
                 {
                     "id": manifest.id,
                     "version": manifest.version,
-                    "name": manifest.name,
+                    "name": name,
                     "kind": manifest.kind,
-                    "description": manifest.description,
+                    "description": description,
                     "icon": parse_plugin_icon(
                         plugin_dir,
                         asset_prefix=f"/api/plugins/market/{manifest.id}/ui",
@@ -453,7 +490,7 @@ class PluginManager:
                 )
         return newly
 
-    def list_installed(self) -> list[dict[str, Any]]:
+    def list_installed(self, *, locale: str | None = None) -> list[dict[str, Any]]:
         out: list[dict[str, Any]] = []
         enabled_map = self.global_enabled_map()
         for plugin_dir in discover_plugin_dirs(self._plugins_dir):
@@ -489,13 +526,14 @@ class PluginManager:
                     }
             else:
                 tools_meta = list(self._tool_catalog.get(manifest.id) or [])
+            name, description = localized_plugin_text(plugin_dir, manifest, locale)
             out.append(
                 {
                     "id": manifest.id,
                     "version": manifest.version,
-                    "name": manifest.name,
+                    "name": name,
                     "kind": manifest.kind,
-                    "description": manifest.description,
+                    "description": description,
                     "icon": parse_plugin_icon(plugin_dir),
                     "group": parse_plugin_group(plugin_dir),
                     "requires": parse_plugin_requires(plugin_dir),

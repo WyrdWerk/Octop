@@ -1,7 +1,11 @@
 id: wiki-summary
-version: 0.1.0
+version: 0.1.1
 name: 维基摘要
 description: 读取 Wikipedia 条目摘要
+i18n:
+  en:
+    name: Wikipedia Summary
+    description: Read the summary of a Wikipedia article
 icon: icon.svg
 group: tools
 kind: tool

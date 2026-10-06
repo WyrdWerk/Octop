@@ -1,7 +1,11 @@
 id: short-link
-version: 0.1.0
+version: 0.1.1
 name: 短链接
 description: 将长 URL 压缩为 is.gd 短链
+i18n:
+  en:
+    name: Short Link
+    description: Shorten long URLs with is.gd
 icon: icon.svg
 group: tools
 kind: tool

@@ -1,7 +1,11 @@
 id: tetris
-version: 0.2.2
+version: 0.2.3
 name: 俄罗斯方块
 description: 在聊天卡片里玩俄罗斯方块，支持键盘与按钮操作
+i18n:
+  en:
+    name: Tetris
+    description: Play Tetris in a chat card with keyboard or buttons
 icon: icon.svg
 group: games
 kind: tool

@@ -1,7 +1,11 @@
 id: sports-scores
-version: 0.1.0
+version: 0.1.1
 name: 赛况
 description: 英超等联赛近期比分（TheSportsDB）
+i18n:
+  en:
+    name: Sports Scores
+    description: Recent scores for the Premier League and other leagues (TheSportsDB)
 icon: icon.svg
 group: news
 kind: tool
