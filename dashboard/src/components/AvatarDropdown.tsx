@@ -185,7 +185,7 @@ export default function AvatarDropdown({
     void preferencesApi
       .setLocale(val)
       .then(async (prefs) => {
-        await applyUserLocale(prefs.locale);
+        await applyUserLocale(prefs.locale, { explicit: true });
         if (user) onUserChange?.({ ...user, locale: prefs.locale });
       })
       .catch((e) => {

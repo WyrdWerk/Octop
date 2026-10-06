@@ -1,3 +1,5 @@
+import i18n from "../i18n";
+
 export interface AcpPermissionOption {
   id: string;
   title: string;
@@ -58,8 +60,5 @@ export function buildAcpPermissionRespondMessage(
   optionId: string,
 ): string {
   const runnerPart = runner ? `runner="${runner}", ` : "";
-  return (
-    `请调用 acp_runner 回应外部 ACP 权限请求：` +
-    `action="respond", ${runnerPart}message="${optionId}"`
-  );
+  return i18n.t("acp.respondPermissionMessage", { runnerPart, optionId });
 }

@@ -346,23 +346,23 @@ export default function SearchConfigPage() {
             {activeSource
               ? t(
                   "advancedSettings.search.sourceConfiguredTitle",
-                  "当前搜索源：{{name}}",
+                  "Current search source: {{name}}",
                   { name: activeSource.name },
                 )
               : t(
                   "advancedSettings.search.sourceBuiltinTitle",
-                  "当前搜索源：内置搜索",
+                  "Current search source: built-in search",
                 )}
           </p>
           <p className={styles.statusDesc}>
             {activeSource
               ? t(
                   "advancedSettings.search.sourceConfiguredDesc",
-                  "已配置第三方搜索服务，内置搜索默认不再加载，避免多个搜索工具同时暴露给模型。",
+                  "A third-party search provider is configured, so the built-in search is no longer loaded by default, avoiding multiple search tools being exposed to the model at once.",
                 )
               : t(
                   "advancedSettings.search.sourceBuiltinDesc",
-                  "未配置第三方搜索服务时，仍可使用产品内置搜索服务；该服务无需 API Key，但不保证稳定性和可用性。配置第三方服务后会自动切换。",
+                  "When no third-party search provider is configured, Octop still provides its built-in search service. It requires no API key, but its stability and availability are not guaranteed. It switches automatically once a third-party provider is configured.",
                 )}
           </p>
         </div>

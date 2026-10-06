@@ -288,7 +288,8 @@
     "groupNameRequired": "请填写分组名称",
     "saveFailed": "没能保存导航布局",
     "dragToReorder": "拖动排序",
-    "chatHistory": "会话列表"
+    "chatHistory": "会话列表",
+    "newVersionBadgeShort": "新"
   },
   "skillPackages": {
     "title": "技能包",
@@ -1670,7 +1671,10 @@
     "historyRetry": "重试",
     "creatingSession": "正在创建会话，请稍候",
     "resizePopup": "调整窗口大小",
-    "unreadMessages": "未读消息"
+    "unreadMessages": "未读消息",
+    "weatherSunny": "晴朗",
+    "weatherRainy": "雨天",
+    "weatherCloudy": "多云"
   },
   "tools": {
     "unknown": "未知工具",
@@ -2768,7 +2772,11 @@
     "readAloud": "朗读",
     "micNotAvailable": "此设备不支持录音，请通过 HTTPS 访问",
     "sttNotAvailable": "此设备不支持语音输入（需要 HTTPS）",
-    "ttsAutoplayBlocked": "浏览器阻止了自动播放，请再次点击朗读按钮"
+    "ttsAutoplayBlocked": "浏览器阻止了自动播放，请再次点击朗读按钮",
+    "mimoVoiceBingtang": "冰糖 (中文·女)",
+    "mimoVoiceMoli": "茉莉 (中文·女)",
+    "mimoVoiceSuda": "苏打 (中文·男)",
+    "mimoVoiceBaihua": "白桦 (中文·男)"
   },
   "security": {
     "intro": "配置专家运行时的安全防护策略。保存后已运行的专家会自动重新加载配置。",
@@ -4951,7 +4959,8 @@
       "deleteConfirm": "确定要删除共享 Provider「{{name}}」？所有用户将无法再使用此 Provider。",
       "deleteSuccess": "已删除共享 Provider「{{name}}」",
       "createSuccess": "共享 Provider「{{name}}」已创建",
-      "createFailed": "创建失败"
+      "createFailed": "创建失败",
+      "loadFailed": "加载共享 Provider 失败"
     }
   },
   "cos": {
@@ -5250,7 +5259,8 @@
     "browseLoadFailed": "加载子目录失败",
     "browseDownloadOnly": "该文件不支持预览，是否下载？",
     "browse_not_text": "该文件不是 UTF-8 文本，请下载查看",
-    "browse_too_large": "文件过大，无法在浏览器中预览或下载"
+    "browse_too_large": "文件过大，无法在浏览器中预览或下载",
+    "loadBackendsFailed": "加载存储后端失败"
   },
   "adminAgents": {
     "total": "共 {{count}} 个智能体",
@@ -6196,7 +6206,8 @@
     "deleteConfirm": "将移除此自定义 Runner。",
     "deleteSuccess": "Runner 已删除",
     "docsHint": "请先在本地安装并配置好 ACP 专家（如 opencode、codebuddy --acp）后再启用 Runner。",
-    "chatPermissionTitle": "外部专家需要权限确认"
+    "chatPermissionTitle": "外部专家需要权限确认",
+    "respondPermissionMessage": "请调用 acp_runner 回应外部 ACP 权限请求：action=\"respond\", {{runnerPart}}message=\"{{optionId}}\""
   },
   "plugins": {
     "loadError": "加载插件失败",
@@ -6600,7 +6611,23 @@
   "pwa": {
     "updateReady": "新版本已就绪",
     "updateNow": "立即更新",
-    "later": "稍后更新"
+    "later": "稍后更新",
+    "addToHomeScreen": "添加到主屏幕",
+    "iosGuideDesc": "将 Octop 安装为 App，随时一键打开。",
+    "iosStep1Before": "点击底部工具栏的",
+    "iosStep1After": "分享按钮",
+    "iosStep2": "向下滚动，点击「添加到主屏幕」",
+    "iosStep3": "点击右上角「添加」完成安装",
+    "installAsDesktopApp": "安装为桌面应用",
+    "desktopGuideDesc": "浏览器尚未准备好一键安装。请按以下方式操作，或刷新页面后再点 Header 中的安装按钮。",
+    "desktopStep1Before": "查看地址栏右侧的",
+    "desktopStep1After": "安装图标并点击",
+    "desktopStep2Edge": "或打开浏览器菜单，选择「应用 Octop」/ Install Octop",
+    "desktopStep2": "或打开浏览器菜单，选择「安装 Octop」/ Install Octop",
+    "desktopStep3": "确认安装后，可从桌面或程序坞一键打开",
+    "desktopHttpsHint": "通过局域网 IP 访问时需使用 HTTPS，否则浏览器不会提供安装选项。",
+    "installApp": "安装应用",
+    "install": "安装"
   },
   "browser": {
     "recordReplay": {
@@ -6611,7 +6638,8 @@
       "startFailed": "开始录制失败",
       "started": "已开始浏览器录制",
       "stop": "停止浏览器录制",
-      "noRecording": "请先完成一次浏览器录制"
+      "noRecording": "请先完成一次浏览器录制",
+      "goalPrompt": "🎬 录制已开始！\n\n请输入你的 **任务目标**（这将成为技能名称和触发关键词），例如：\"登录OA系统\"、\"查询天气\"等。"
     }
   },
   "shortcut": {
@@ -6621,7 +6649,35 @@
     "applyFailed": "应用技能失败",
     "recordingStopped": "录制完成，已生成 {{steps}} 个回放步骤",
     "skillApplied": "技能 \"{{name}}\" 已成功应用",
-    "stopFailed": "停止录制失败"
+    "stopFailed": "停止录制失败",
+    "autoRecordingStartedMessage": "🎬 录制已开始！请在浏览器中进行你想要自动化的操作。\n\n操作完成后，输入\"结束\"即可结束录制，系统将自动生成技能脚本。",
+    "previewTruncated": "... (共 {{count}} 行，完整内容将在确认后保存)",
+    "recordingDoneMessage": "✅ 录制完成！已生成 {{steps}} 个回放步骤。",
+    "scriptPreviewHeading": "📝 **技能脚本预览：**",
+    "confirmToApplyHint": "回复\"确认\"即可应用此技能，之后可以一键回放相同操作流程。",
+    "scriptGenerationFailedMessage": "⚠️ 技能脚本生成失败，请稍后重试或手动生成。",
+    "skillAppliedMessage": "🎉 技能 **{{name}}** 已成功应用！\n\n之后可以通过聊天输入相关指令，一键回放相同的浏览器操作流程。",
+    "browserPanel": {
+      "objectiveSetMsg": "✅ 任务目标已设定：**{{objective}}**\n\n接下来请描述你想让AI助手在浏览器中执行的具体操作。\n\n例如：\"打开B站、小红书和百度，搜索今天天气\"。\n\n描述完成后AI会自动执行操作；操作结束后输入\"结束\"即可停止录制。",
+      "previewTruncated": "... (共 {{total}} 行，完整内容将在确认后保存)",
+      "recordingDoneMsg": "✅ 录制完成！已生成 {{steps}} 个回放步骤。",
+      "scriptPreviewHeading": "📝 **技能「{{name}}」脚本预览：**",
+      "replyConfirmHint": "回复\"确认\"即可应用此技能。",
+      "afterApplyHint": "应用后，只需输入 **\"{{name}}\"** 即可一键触发回放相同操作流程。",
+      "scriptGenFailedMsg": "⚠️ 技能脚本生成失败，请稍后重试。",
+      "skillAppliedMsg": "🎉 技能 **「{{name}}」** 已成功应用！\n\n之后只需输入 **\"{{name}}\"** 即可一键触发回放相同的浏览器操作流程。",
+      "replayNoRecordingMsg": "⚠️ 无法找到技能「{{name}}」的录制记录，回放失败。",
+      "recordingNotFound": "找不到录制记录",
+      "replayDoneMsg": "🎬 Browser-Skill「{{name}}」回放完成！",
+      "stepFailedLine": "步骤 {{id}} ({{kind}}): {{error}}",
+      "stepExecFailed": "执行失败",
+      "replayFailedMsg": "⚠️ 技能「{{name}}」回放失败：\n{{detail}}",
+      "replayErrorMsg": "⚠️ 技能回放出错：{{error}}",
+      "replayAllPassedMsg": "🔄 技能回放完成！所有步骤已成功执行。",
+      "replayFailedShortMsg": "⚠️ 技能回放失败：{{error}}",
+      "replayingMsg": "🔄 正在使用技能「{{name}}」进行回放...",
+      "stillRecordingMsg": "💡 录制还在进行中。如果操作已完成，输入\"结束\"即可停止录制并生成技能脚本。"
+    }
   },
   "skillRecordGuide": {
     "buttonLabel": "技能录制",
@@ -6640,5 +6696,88 @@
     "step4Desc": "操作完成后，输入\"结束\"停止录制，确认后技能将以任务目标为名保存。之后只需输入任务目标关键词即可触发回放。",
     "envNotReady": "请先安装浏览器环境",
     "title": "技能录制引导"
+  },
+  "backendBuilder": {
+    "hintLocalShell": "本机 shell + 文件系统(完全访问主机)",
+    "hintFilesystem": "受限本机文件系统(只在 root_dir 下读写)",
+    "hintState": "进程内状态,重启即失效",
+    "hintStore": "key-value 存储,适合临时数据",
+    "hintS3": "AWS S3 / 兼容 S3 协议的对象存储",
+    "hintCos": "腾讯云 COS(基于 S3 协议)",
+    "hintPostgres": "Postgres 数据库后端",
+    "backendTooltip": "决定 agent 的工具/文件读写后端。Composite 模式按路径前缀路由到不同后端。",
+    "modeIndependent": "独立 backend(单一类型)",
+    "modeComposite": "Composite(按路径路由)",
+    "defaultBackendHint": "所有未匹配 routes 前缀的请求落到这里",
+    "addRoute": "添加路由"
+  },
+  "pwaDebug": {
+    "swSupport": "Service Worker 支持",
+    "supported": "支持",
+    "swUnsupported": "浏览器不支持 SW",
+    "swRegState": "SW 注册状态",
+    "swRegNone": "未找到任何 Service Worker 注册",
+    "swControl": "SW 控制当前页面",
+    "swNotControlling": "SW 未控制当前页面（需刷新或 clientsClaim）",
+    "iconLoadFailed": "{{src}}: 加载失败",
+    "iconSizeMismatch": "{{src}}: 声明 {{sizes}}，实际 {{width}}x{{height}}",
+    "iconCheckError": "{{src}}: 校验异常",
+    "iconSizes": "图标尺寸与 manifest 一致",
+    "iconsChecked": "已校验 {{count}} 个图标",
+    "manifestJsonParseFailed": "HTTP {{status}} 但 JSON 解析失败",
+    "manifestBlocked": "HTTP {{status}} — 被拦截或 404",
+    "manifestReachable": "manifest.json 可访问",
+    "manifestFetchFailed": "fetch 失败: {{message}}（可能被认证代理拦截）",
+    "swFetch": "sw.js 可访问且无强缓存",
+    "fetchFailed": "fetch 失败: {{message}}",
+    "bipState": "beforeinstallprompt 状态",
+    "seeLiveStatus": "见下方实时状态",
+    "runMode": "当前运行模式",
+    "modeStandalone": "standalone（已安装模式）",
+    "modeBrowserTab": "browser tab（浏览器标签页）",
+    "dismissedLabel": "用户已点过「不安装」",
+    "dismissedSet": "已设置（清除方法见下方）",
+    "dismissedNotSet": "未设置",
+    "bipCaptured": "beforeinstallprompt 已捕获",
+    "bipCapturedYes": "✓ 事件已捕获，可触发安装",
+    "bipCapturedNo": "未捕获（Chrome 内部评估后未发送事件，可能在沉默期）",
+    "swReadyLabel": "前端 swReady 状态",
+    "swReadyTrue": "swReady=true（按钮应已显示）",
+    "swReadyFalse": "swReady=false（pwa-prompt.ts 检测 SW 失败，按钮隐藏）",
+    "clearedReload": "已清除，请刷新页面",
+    "installResult": "安装结果: {{result}}",
+    "logForceStart": "[force] 清除本地拒绝标记，尝试触发安装对话框…",
+    "logForceIos": "[force] iOS 需手动「添加到主屏幕」，已打开引导",
+    "logForceWaiting": "[force] 尚未捕获 beforeinstallprompt，等待 3 秒…",
+    "installAccepted": "安装已接受，应用应出现在程序坞/启动台",
+    "installDismissed": "安装对话框已弹出，你选择了取消",
+    "logForceManual": "[force] 浏览器未提供 programmatic install，打开手动安装引导",
+    "logWaitStart": "[wait] 等待 beforeinstallprompt 8 秒...",
+    "logWaitCaptured": "[wait] ✓ 事件已捕获",
+    "logWaitTimeout": "[wait] ✗ 8 秒内未触发，Chrome 处于静默期或评估未通过",
+    "resetConfirm": "将注销当前 Service Worker 并清空所有 PWA 状态。确定要重置吗？\n操作完成后会自动刷新页面。",
+    "logResetDone": "[reset] SW 注销 + 缓存清理完成，即将刷新",
+    "title": "PWA 诊断",
+    "subtitle": "在手机上访问此页面，查看 PWA 安装条件是否满足",
+    "forceInstalling": "安装尝试中…",
+    "forceInstall": "强制尝试安装",
+    "copied": "已复制 ✓",
+    "copyReport": "复制诊断报告",
+    "clearDismissed": "清除「不安装」标记",
+    "waitPrompt": "等待安装事件（8s）",
+    "resetPwa": "重置 PWA 状态（注销 SW）",
+    "directPrompt": "直接 prompt（已捕获）",
+    "notesTitle": "说明：",
+    "noteSwTitle": "SW 未控制当前页面",
+    "noteSwBody": "：正常，首次访问后刷新即可",
+    "noteBipTitle": "beforeinstallprompt 未捕获",
+    "noteBipBody": "：Chrome 需要\"参与度\"才触发——在站点上正常使用几分钟后关闭，第二天或几小时后重新打开，Chrome 会自动弹出安装横条",
+    "noteManifestTitle": "manifest 被拦截",
+    "noteManifestBody": "：需要在反向代理/网关白名单中放行 /manifest.json",
+    "noteDismissedTitle": "已设置「不安装」标记",
+    "noteDismissedBody": "：点击「清除」按钮后刷新",
+    "noteForceTitle": "强制尝试安装",
+    "noteForceBody": "：清除本地拒绝标记后调用 beforeinstallprompt；若浏览器未发送该事件，会打开手动安装引导（网页无法绕过 Chrome 强制弹窗）",
+    "noteCopy": "点击「复制诊断报告」把结果发给开发者"
   }
 }

@@ -962,7 +962,10 @@ export default function RemoteBrowserPage({
 
         // Push a prompt asking the user to input their task objective
         chatStore.appendPushMessage(
-          '🎬 录制已开始！\n\n请输入你的 **任务目标**（这将成为技能名称和触发关键词），例如："登录OA系统"、"查询天气"等。',
+          t(
+            "browser.recordReplay.goalPrompt",
+            '🎬 录制已开始！\n\n请输入你的 **任务目标**（这将成为技能名称和触发关键词），例如："登录OA系统"、"查询天气"等。',
+          ),
         );
       } else {
         antMessage.error(

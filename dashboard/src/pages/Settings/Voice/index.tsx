@@ -477,10 +477,10 @@ export function VoiceSettingsPanel() {
                     value={mimoVoiceId}
                     onChange={(v) => setMimoVoiceId(v)}
                     options={[
-                      { value: "冰糖", label: "冰糖 (中文·女)" },
-                      { value: "茉莉", label: "茉莉 (中文·女)" },
-                      { value: "苏打", label: "苏打 (中文·男)" },
-                      { value: "白桦", label: "白桦 (中文·男)" },
+                      { value: "冰糖", label: t("voice.mimoVoiceBingtang") },
+                      { value: "茉莉", label: t("voice.mimoVoiceMoli") },
+                      { value: "苏打", label: t("voice.mimoVoiceSuda") },
+                      { value: "白桦", label: t("voice.mimoVoiceBaihua") },
                       { value: "Mia", label: "Mia (EN·Female)" },
                       { value: "Chloe", label: "Chloe (EN·Female)" },
                       { value: "Milo", label: "Milo (EN·Male)" },

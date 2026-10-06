@@ -10,6 +10,8 @@ import {
   IosGuide,
 } from "../../components/PwaInstallPrompt";
 import { copyText } from "../../utils/copyText";
+import { useTranslation } from "react-i18next";
+import i18n from "../../i18n";
 
 interface CheckItem {
   id: string;
@@ -55,6 +57,7 @@ function StatusDot({ status }: { status: CheckItem["status"] }) {
 }
 
 export default function PwaDebugPage() {
+  const { t } = useTranslation();
   const [checks, setChecks] = useState<CheckItem[]>([]);
   const [swLog, setSwLog] = useState<string[]>([]);
   const [copied, setCopied] = useState(false);
@@ -90,9 +93,11 @@ export default function PwaDebugPage() {
     const swSupported = "serviceWorker" in navigator;
     items.push({
       id: "sw-support",
-      label: "Service Worker 支持",
+      label: i18n.t("pwaDebug.swSupport"),
       status: swSupported ? "pass" : "fail",
-      detail: swSupported ? "支持" : "浏览器不支持 SW",
+      detail: swSupported
+        ? i18n.t("pwaDebug.supported")
+        : i18n.t("pwaDebug.swUnsupported"),
     });
     log.push(`SW support: ${swSupported}`);
 
@@ -106,9 +111,9 @@ export default function PwaDebugPage() {
               ...prev,
               {
                 id: "sw-reg",
-                label: "SW 注册状态",
+                label: i18n.t("pwaDebug.swRegState"),
                 status: "fail",
-                detail: "未找到任何 Service Worker 注册",
+                detail: i18n.t("pwaDebug.swRegNone"),
               },
             ]);
             log.push("SW registration: NONE");
@@ -125,7 +130,7 @@ export default function PwaDebugPage() {
               ...prev,
               {
                 id: "sw-reg",
-                label: "SW 注册状态",
+                label: i18n.t("pwaDebug.swRegState"),
                 status: state === "active" ? "pass" : "warn",
                 detail: `scope: ${scope}  state: ${state}`,
               },
@@ -138,11 +143,11 @@ export default function PwaDebugPage() {
               ...prev,
               {
                 id: "sw-control",
-                label: "SW 控制当前页面",
+                label: i18n.t("pwaDebug.swControl"),
                 status: controlled ? "pass" : "warn",
                 detail: controlled
                   ? `controller: ${navigator.serviceWorker.controller?.scriptURL}`
-                  : "SW 未控制当前页面（需刷新或 clientsClaim）",
+                  : i18n.t("pwaDebug.swNotControlling"),
               },
             ]);
             log.push(
@@ -157,7 +162,7 @@ export default function PwaDebugPage() {
             ...prev,
             {
               id: "sw-reg",
-              label: "SW 注册状态",
+              label: i18n.t("pwaDebug.swRegState"),
               status: "fail",
               detail: `Error: ${e.message}`,
             },
@@ -208,14 +213,19 @@ export default function PwaDebugPage() {
                     img.src = src.startsWith("/") ? src : `/${src}`;
                   });
                   if (!loaded) {
-                    return `${src}: 加载失败`;
+                    return i18n.t("pwaDebug.iconLoadFailed", { src });
                   }
                   if (img.naturalWidth !== w || img.naturalHeight !== h) {
-                    return `${src}: 声明 ${sizes}，实际 ${img.naturalWidth}x${img.naturalHeight}`;
+                    return i18n.t("pwaDebug.iconSizeMismatch", {
+                      src,
+                      sizes,
+                      width: img.naturalWidth,
+                      height: img.naturalHeight,
+                    });
                   }
                   return null;
                 } catch {
-                  return `${src}: 校验异常`;
+                  return i18n.t("pwaDebug.iconCheckError", { src });
                 }
               }),
             ).then((mismatches) => {
@@ -225,9 +235,11 @@ export default function PwaDebugPage() {
                   ...prev,
                   {
                     id: "icon-sizes",
-                    label: "图标尺寸与 manifest 一致",
+                    label: i18n.t("pwaDebug.iconSizes"),
                     status: "pass",
-                    detail: `已校验 ${icons.length} 个图标`,
+                    detail: i18n.t("pwaDebug.iconsChecked", {
+                      count: icons.length,
+                    }),
                   },
                 ]);
                 log.push("icon sizes: all match manifest");
@@ -236,7 +248,7 @@ export default function PwaDebugPage() {
                   ...prev,
                   {
                     id: "icon-sizes",
-                    label: "图标尺寸与 manifest 一致",
+                    label: i18n.t("pwaDebug.iconSizes"),
                     status: "fail",
                     detail: bad.join(" | "),
                   },
@@ -252,25 +264,34 @@ export default function PwaDebugPage() {
             });
           } catch {
             status = "fail";
-            detail = `HTTP ${res.status} 但 JSON 解析失败`;
+            detail = i18n.t("pwaDebug.manifestJsonParseFailed", {
+              status: res.status,
+            });
           }
         } else {
-          detail = `HTTP ${res.status} — 被拦截或 404`;
+          detail = i18n.t("pwaDebug.manifestBlocked", { status: res.status });
           log.push(`manifest fetch failed: ${res.status} url=${res.url}`);
         }
         setChecks((prev) => [
           ...prev,
-          { id: "manifest", label: "manifest.json 可访问", status, detail },
+          {
+            id: "manifest",
+            label: i18n.t("pwaDebug.manifestReachable"),
+            status,
+            detail,
+          },
         ]);
       })
       .catch((e) => {
-        const detail = `fetch 失败: ${e.message}（可能被认证代理拦截）`;
+        const detail = i18n.t("pwaDebug.manifestFetchFailed", {
+          message: e.message,
+        });
         log.push(`manifest fetch error: ${e.message}`);
         setChecks((prev) => [
           ...prev,
           {
             id: "manifest",
-            label: "manifest.json 可访问",
+            label: i18n.t("pwaDebug.manifestReachable"),
             status: "fail",
             detail,
           },
@@ -294,7 +315,12 @@ export default function PwaDebugPage() {
         log.push(`sw.js: ${detail}`);
         setChecks((prev) => [
           ...prev,
-          { id: "sw-fetch", label: "sw.js 可访问且无强缓存", status, detail },
+          {
+            id: "sw-fetch",
+            label: i18n.t("pwaDebug.swFetch"),
+            status,
+            detail,
+          },
         ]);
       })
       .catch((e) => {
@@ -303,9 +329,9 @@ export default function PwaDebugPage() {
           ...prev,
           {
             id: "sw-fetch",
-            label: "sw.js 可访问且无强缓存",
+            label: i18n.t("pwaDebug.swFetch"),
             status: "fail",
-            detail: `fetch 失败: ${e.message}`,
+            detail: i18n.t("pwaDebug.fetchFailed", { message: e.message }),
           },
         ]);
       });
@@ -314,9 +340,9 @@ export default function PwaDebugPage() {
     // Checked via useSyncExternalStore below, but add as static check here
     items.push({
       id: "bip",
-      label: "beforeinstallprompt 状态",
+      label: i18n.t("pwaDebug.bipState"),
       status: "info",
-      detail: "见下方实时状态",
+      detail: i18n.t("pwaDebug.seeLiveStatus"),
     });
 
     // ── 8. Standalone mode ───────────────────────────────────────
@@ -325,11 +351,11 @@ export default function PwaDebugPage() {
       (navigator as { standalone?: boolean }).standalone === true;
     items.push({
       id: "standalone",
-      label: "当前运行模式",
+      label: i18n.t("pwaDebug.runMode"),
       status: standalone ? "info" : "info",
       detail: standalone
-        ? "standalone（已安装模式）"
-        : "browser tab（浏览器标签页）",
+        ? i18n.t("pwaDebug.modeStandalone")
+        : i18n.t("pwaDebug.modeBrowserTab"),
     });
     log.push(`standalone: ${standalone}`);
 
@@ -346,9 +372,11 @@ export default function PwaDebugPage() {
     const dismissed = localStorage.getItem("pwa:install-dismissed");
     items.push({
       id: "dismissed",
-      label: "用户已点过「不安装」",
+      label: i18n.t("pwaDebug.dismissedLabel"),
       status: dismissed ? "warn" : "pass",
-      detail: dismissed ? `已设置（清除方法见下方）` : "未设置",
+      detail: dismissed
+        ? i18n.t("pwaDebug.dismissedSet")
+        : i18n.t("pwaDebug.dismissedNotSet"),
     });
     log.push(`dismissed flag: ${dismissed ?? "not set"}`);
 
@@ -364,26 +392,26 @@ export default function PwaDebugPage() {
     ...checks,
     {
       id: "bip-live",
-      label: "beforeinstallprompt 已捕获",
+      label: t("pwaDebug.bipCaptured"),
       status: installSnap.prompt ? "pass" : "warn",
       detail: installSnap.prompt
-        ? "✓ 事件已捕获，可触发安装"
-        : "未捕获（Chrome 内部评估后未发送事件，可能在沉默期）",
+        ? t("pwaDebug.bipCapturedYes")
+        : t("pwaDebug.bipCapturedNo"),
     },
     {
       id: "swready-live",
-      label: "前端 swReady 状态",
+      label: t("pwaDebug.swReadyLabel"),
       status: installSnap.swReady ? "pass" : "warn",
       detail: installSnap.swReady
-        ? `swReady=true（按钮应已显示）`
-        : `swReady=false（pwa-prompt.ts 检测 SW 失败，按钮隐藏）`,
+        ? t("pwaDebug.swReadyTrue")
+        : t("pwaDebug.swReadyFalse"),
     },
   ];
 
   const handleClearDismissed = () => {
     localStorage.removeItem("pwa:install-dismissed");
     localStorage.removeItem("pwa:ios-guide-shown");
-    alert("已清除，请刷新页面");
+    alert(t("pwaDebug.clearedReload"));
   };
 
   const handleCopyLog = () => {
@@ -402,35 +430,26 @@ export default function PwaDebugPage() {
 
   const handleInstall = async () => {
     const result = await triggerInstall();
-    alert(`安装结果: ${result}`);
+    alert(t("pwaDebug.installResult", { result }));
   };
 
   /** Best-effort install: clear local dismiss, wait for prompt, call prompt(). */
   const handleForceInstall = async () => {
     if (forceInstalling) return;
     setForceInstalling(true);
-    setSwLog((prev) => [
-      ...prev,
-      "[force] 清除本地拒绝标记，尝试触发安装对话框…",
-    ]);
+    setSwLog((prev) => [...prev, t("pwaDebug.logForceStart")]);
     localStorage.removeItem("pwa:install-dismissed");
     localStorage.removeItem("pwa:ios-guide-shown");
 
     try {
       if (isIos) {
         setShowIosGuide(true);
-        setSwLog((prev) => [
-          ...prev,
-          "[force] iOS 需手动「添加到主屏幕」，已打开引导",
-        ]);
+        setSwLog((prev) => [...prev, t("pwaDebug.logForceIos")]);
         return;
       }
 
       if (!getPwaInstallSnapshot().prompt) {
-        setSwLog((prev) => [
-          ...prev,
-          "[force] 尚未捕获 beforeinstallprompt，等待 3 秒…",
-        ]);
+        setSwLog((prev) => [...prev, t("pwaDebug.logForceWaiting")]);
         await waitForInstallPrompt(3000);
       }
 
@@ -438,18 +457,15 @@ export default function PwaDebugPage() {
       setSwLog((prev) => [...prev, `[force] triggerInstall → ${result}`]);
 
       if (result === "accepted") {
-        alert("安装已接受，应用应出现在程序坞/启动台");
+        alert(t("pwaDebug.installAccepted"));
         return;
       }
       if (result === "dismissed") {
-        alert("安装对话框已弹出，你选择了取消");
+        alert(t("pwaDebug.installDismissed"));
         return;
       }
 
-      setSwLog((prev) => [
-        ...prev,
-        "[force] 浏览器未提供 programmatic install，打开手动安装引导",
-      ]);
+      setSwLog((prev) => [...prev, t("pwaDebug.logForceManual")]);
       setShowManualGuide(true);
     } finally {
       setForceInstalling(false);
@@ -457,22 +473,16 @@ export default function PwaDebugPage() {
   };
 
   const handleWaitPrompt = async () => {
-    setSwLog((prev) => [...prev, "[wait] 等待 beforeinstallprompt 8 秒..."]);
+    setSwLog((prev) => [...prev, t("pwaDebug.logWaitStart")]);
     const prompt = await waitForInstallPrompt(8000);
     setSwLog((prev) => [
       ...prev,
-      prompt
-        ? "[wait] ✓ 事件已捕获"
-        : "[wait] ✗ 8 秒内未触发，Chrome 处于静默期或评估未通过",
+      prompt ? t("pwaDebug.logWaitCaptured") : t("pwaDebug.logWaitTimeout"),
     ]);
   };
 
   const handleResetPwa = async () => {
-    if (
-      !confirm(
-        "将注销当前 Service Worker 并清空所有 PWA 状态。确定要重置吗？\n操作完成后会自动刷新页面。",
-      )
-    ) {
+    if (!confirm(t("pwaDebug.resetConfirm"))) {
       return;
     }
     const regs = await navigator.serviceWorker.getRegistrations();
@@ -488,7 +498,7 @@ export default function PwaDebugPage() {
         if (n.toLowerCase().includes("workbox")) await caches.delete(n);
       }
     }
-    setSwLog((prev) => [...prev, "[reset] SW 注销 + 缓存清理完成，即将刷新"]);
+    setSwLog((prev) => [...prev, t("pwaDebug.logResetDone")]);
     setTimeout(() => location.reload(), 800);
   };
 
@@ -515,7 +525,7 @@ export default function PwaDebugPage() {
           color: "var(--fn-text-primary)",
         }}
       >
-        PWA 诊断
+        {t("pwaDebug.title")}
       </h2>
       <p
         style={{
@@ -524,7 +534,7 @@ export default function PwaDebugPage() {
           color: "var(--fn-text-tertiary)",
         }}
       >
-        在手机上访问此页面，查看 PWA 安装条件是否满足
+        {t("pwaDebug.subtitle")}
       </p>
 
       {/* Check list */}
@@ -596,7 +606,9 @@ export default function PwaDebugPage() {
             cursor: forceInstalling ? "not-allowed" : "pointer",
           }}
         >
-          {forceInstalling ? "安装尝试中…" : "强制尝试安装"}
+          {forceInstalling
+            ? t("pwaDebug.forceInstalling")
+            : t("pwaDebug.forceInstall")}
         </button>
         <button
           onClick={handleCopyLog}
@@ -610,7 +622,7 @@ export default function PwaDebugPage() {
             cursor: "pointer",
           }}
         >
-          {copied ? "已复制 ✓" : "复制诊断报告"}
+          {copied ? t("pwaDebug.copied") : t("pwaDebug.copyReport")}
         </button>
         <button
           onClick={handleClearDismissed}
@@ -624,7 +636,7 @@ export default function PwaDebugPage() {
             cursor: "pointer",
           }}
         >
-          清除「不安装」标记
+          {t("pwaDebug.clearDismissed")}
         </button>
         <button
           onClick={() => void handleWaitPrompt()}
@@ -638,7 +650,7 @@ export default function PwaDebugPage() {
             cursor: "pointer",
           }}
         >
-          等待安装事件（8s）
+          {t("pwaDebug.waitPrompt")}
         </button>
         <button
           onClick={() => void handleResetPwa()}
@@ -652,7 +664,7 @@ export default function PwaDebugPage() {
             cursor: "pointer",
           }}
         >
-          重置 PWA 状态（注销 SW）
+          {t("pwaDebug.resetPwa")}
         </button>
         {installSnap.prompt && (
           <button
@@ -669,7 +681,7 @@ export default function PwaDebugPage() {
               cursor: "pointer",
             }}
           >
-            直接 prompt（已捕获）
+            {t("pwaDebug.directPrompt")}
           </button>
         )}
       </div>
@@ -691,18 +703,18 @@ export default function PwaDebugPage() {
           lineHeight: 1.7,
         }}
       >
-        <strong>说明：</strong>
-        <br />• <strong>SW 未控制当前页面</strong>：正常，首次访问后刷新即可
-        <br />• <strong>beforeinstallprompt 未捕获</strong>：Chrome
-        需要"参与度"才触发——在站点上正常使用几分钟后关闭，第二天或几小时后重新打开，Chrome
-        会自动弹出安装横条
-        <br />• <strong>manifest 被拦截</strong>
-        ：需要在反向代理/网关白名单中放行 /manifest.json
-        <br />• <strong>已设置「不安装」标记</strong>：点击「清除」按钮后刷新
-        <br />• <strong>强制尝试安装</strong>：清除本地拒绝标记后调用
-        beforeinstallprompt；若浏览器未发送该事件，会打开手动安装引导（网页无法绕过
-        Chrome 强制弹窗）
-        <br />• 点击「复制诊断报告」把结果发给开发者
+        <strong>{t("pwaDebug.notesTitle")}</strong>
+        <br />• <strong>{t("pwaDebug.noteSwTitle")}</strong>
+        {t("pwaDebug.noteSwBody")}
+        <br />• <strong>{t("pwaDebug.noteBipTitle")}</strong>
+        {t("pwaDebug.noteBipBody")}
+        <br />• <strong>{t("pwaDebug.noteManifestTitle")}</strong>
+        {t("pwaDebug.noteManifestBody")}
+        <br />• <strong>{t("pwaDebug.noteDismissedTitle")}</strong>
+        {t("pwaDebug.noteDismissedBody")}
+        <br />• <strong>{t("pwaDebug.noteForceTitle")}</strong>
+        {t("pwaDebug.noteForceBody")}
+        <br />• {t("pwaDebug.noteCopy")}
       </div>
     </div>
   );

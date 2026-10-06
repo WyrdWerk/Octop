@@ -24,8 +24,9 @@ export function detectBrowserLocale(): UiLocale {
   return "en";
 }
 
+/** Unknown / missing values fall back to English (global default). */
 export function normalizeUiLocale(raw: string | null | undefined): UiLocale {
-  if (!raw) return "zh";
+  if (!raw) return "en";
   return raw.toLowerCase().startsWith("zh") ? "zh" : "en";
 }
 
@@ -39,17 +40,53 @@ export function readStoredUiLocale(): UiLocale | null {
   return null;
 }
 
-export function storeUiLocale(locale: UiLocale): void {
+/** Set to "1" once the user picks a language themselves (switcher / setup). */
+export const UI_LOCALE_EXPLICIT_KEY = "octop-ui-locale-explicit";
+
+/**
+ * Persist the active UI locale. Pass ``explicit: true`` only when the user
+ * chose the language themselves, so later server defaults cannot override it.
+ */
+export function storeUiLocale(
+  locale: UiLocale,
+  opts?: { explicit?: boolean },
+): void {
   try {
     localStorage.setItem(UI_LOCALE_STORAGE_KEY, locale);
+    if (opts?.explicit) localStorage.setItem(UI_LOCALE_EXPLICIT_KEY, "1");
   } catch {
     // quota / disabled
   }
 }
 
-/** Stored user preference wins; otherwise follow the browser. */
+/** Stored locale, but only when the user explicitly picked it. */
+export function readExplicitUiLocale(): UiLocale | null {
+  try {
+    if (localStorage.getItem(UI_LOCALE_EXPLICIT_KEY) !== "1") return null;
+  } catch {
+    return null;
+  }
+  return readStoredUiLocale();
+}
+
+/** Explicit user pick wins; otherwise follow the browser (default English). */
 export function resolveInitialLocale(): UiLocale {
-  return readStoredUiLocale() ?? detectBrowserLocale();
+  return readExplicitUiLocale() ?? detectBrowserLocale();
+}
+
+/**
+ * Resolve the UI locale after login from the server-stored user locale.
+ *
+ * The server defaults new users to ``zh``, so a server ``zh`` is ambiguous
+ * (default vs. deliberate). It is honored only when the user explicitly
+ * picked Chinese on this device or the browser prefers Chinese; otherwise the
+ * explicit/browser preference (default English) wins. A server ``en`` is
+ * never a default and is always honored.
+ */
+export function resolveUserLocale(raw: string | null | undefined): UiLocale {
+  const server = normalizeUiLocale(raw);
+  if (server === "en") return "en";
+  return readExplicitUiLocale() ?? detectBrowserLocale();
 }
 
 export function syncDocumentLang(locale: UiLocale): void {

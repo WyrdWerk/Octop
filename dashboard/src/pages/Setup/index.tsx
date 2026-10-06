@@ -212,7 +212,7 @@ export default function SetupPage() {
 
   const handleLanguageChange = (lang: string) => {
     const locale: UiLocale = lang.startsWith("zh") ? "zh" : "en";
-    storeUiLocale(locale);
+    storeUiLocale(locale, { explicit: true });
     void ensureLocaleBundle(locale).then(() => i18n.changeLanguage(locale));
     const setupJwt = wizardSession.loadSetupJwt();
     if (setupJwt) {

@@ -34,6 +34,7 @@ import {
   Typography,
 } from "antd";
 import { Trash2, Plus, Info } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 const { Text } = Typography;
 
@@ -80,30 +81,42 @@ interface BackendBuilderProps {
   onChange?: (spec: BackendSpec) => void;
 }
 
-const KIND_OPTIONS: { value: BackendKind; label: string; hint: string }[] = [
+const KIND_OPTIONS: { value: BackendKind; label: string; hintKey: string }[] = [
   {
     value: "local_shell",
     label: "Local shell",
-    hint: "本机 shell + 文件系统(完全访问主机)",
+    hintKey: "backendBuilder.hintLocalShell",
   },
   {
     value: "filesystem",
     label: "Filesystem",
-    hint: "受限本机文件系统(只在 root_dir 下读写)",
+    hintKey: "backendBuilder.hintFilesystem",
   },
-  { value: "state", label: "State (in-memory)", hint: "进程内状态,重启即失效" },
-  { value: "store", label: "Store (kv)", hint: "key-value 存储,适合临时数据" },
+  {
+    value: "state",
+    label: "State (in-memory)",
+    hintKey: "backendBuilder.hintState",
+  },
+  {
+    value: "store",
+    label: "Store (kv)",
+    hintKey: "backendBuilder.hintStore",
+  },
   {
     value: "s3",
     label: "S3 / object storage",
-    hint: "AWS S3 / 兼容 S3 协议的对象存储",
+    hintKey: "backendBuilder.hintS3",
   },
   {
     value: "cos",
     label: "Tencent Cloud COS",
-    hint: "腾讯云 COS(基于 S3 协议)",
+    hintKey: "backendBuilder.hintCos",
   },
-  { value: "postgres", label: "Postgres", hint: "Postgres 数据库后端" },
+  {
+    value: "postgres",
+    label: "Postgres",
+    hintKey: "backendBuilder.hintPostgres",
+  },
 ];
 
 function defaultIndependent(): IndependentSpec {
@@ -127,6 +140,7 @@ function IndependentEditor({
   onChange: (next: IndependentSpec) => void;
   compact?: boolean;
 }) {
+  const { t } = useTranslation();
   const setField = (k: string, v: unknown) => onChange({ ...value, [k]: v });
   const opt = KIND_OPTIONS.find((o) => o.value === value.type);
   const labelStyle = { fontSize: 12, color: "var(--fn-text-tertiary)" };
@@ -140,21 +154,23 @@ function IndependentEditor({
         <div style={labelStyle}>Type</div>
         <Select
           value={value.type}
-          onChange={(t) => onChange({ type: t as BackendKind })}
+          onChange={(v) => onChange({ type: v as BackendKind })}
           style={{ width: "100%" }}
           options={KIND_OPTIONS.map((o) => ({
             value: o.value,
             label: (
               <Space size={6}>
                 <span>{o.label}</span>
-                <Tooltip title={o.hint}>
+                <Tooltip title={t(o.hintKey)}>
                   <Info size={12} color="var(--fn-text-tertiary)" />
                 </Tooltip>
               </Space>
             ),
           }))}
         />
-        {opt && <div style={{ ...labelStyle, marginTop: 4 }}>{opt.hint}</div>}
+        {opt && (
+          <div style={{ ...labelStyle, marginTop: 4 }}>{t(opt.hintKey)}</div>
+        )}
       </div>
 
       <div style={blockStyle}>
@@ -232,6 +248,7 @@ export default function BackendBuilder({
   value,
   onChange,
 }: BackendBuilderProps) {
+  const { t } = useTranslation();
   const isComposite = value && (value as CompositeSpec).type === "composite";
   const [mode, setMode] = useState<"independent" | "composite">(
     isComposite ? "composite" : "independent",
@@ -272,7 +289,7 @@ export default function BackendBuilder({
         label={
           <Space size={6}>
             <span>Backend</span>
-            <Tooltip title="决定 agent 的工具/文件读写后端。Composite 模式按路径前缀路由到不同后端。">
+            <Tooltip title={t("backendBuilder.backendTooltip")}>
               <Info size={12} color="var(--fn-text-tertiary)" />
             </Tooltip>
           </Space>
@@ -284,8 +301,14 @@ export default function BackendBuilder({
           onChange={(v) => setMode(v as "independent" | "composite")}
           style={{ width: 220 }}
           options={[
-            { value: "independent", label: "独立 backend(单一类型)" },
-            { value: "composite", label: "Composite(按路径路由)" },
+            {
+              value: "independent",
+              label: t("backendBuilder.modeIndependent"),
+            },
+            {
+              value: "composite",
+              label: t("backendBuilder.modeComposite"),
+            },
           ]}
         />
       </Form.Item>
@@ -325,7 +348,7 @@ export default function BackendBuilder({
                 marginLeft: 8,
               }}
             >
-              所有未匹配 routes 前缀的请求落到这里
+              {t("backendBuilder.defaultBackendHint")}
             </Text>
             <div style={{ marginTop: 8 }}>
               <IndependentEditor
@@ -397,7 +420,7 @@ export default function BackendBuilder({
               ])
             }
           >
-            添加路由
+            {t("backendBuilder.addRoute")}
           </Button>
         </div>
       )}
