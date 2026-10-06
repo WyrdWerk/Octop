@@ -12,6 +12,7 @@ from octop.config import OctopConfig
 from octop.infra.agents.security import tool_execution_may_pause
 from octop.infra.auth.captcha import current_env, load_view, save_settings
 from octop.infra.users.identity import User
+from octop.infra.utils.region_defaults import channel_allowlist
 
 router = APIRouter()
 
@@ -94,6 +95,13 @@ class MobileCapabilitiesResponse(BaseModel):
 
 class CapabilitiesResponse(BaseModel):
     mobile: MobileCapabilitiesResponse
+    channel_kinds: list[str] | None = Field(
+        default=None,
+        description=(
+            "IM channel kinds offered in the dashboard (OCTOP_CHANNEL_ALLOWLIST); "
+            "null means every kind."
+        ),
+    )
 
 
 @router.get(
@@ -109,8 +117,10 @@ async def get_capabilities(
     _ = user
     cfg: OctopConfig = server.services.config
     cap = cfg.capabilities.mobile
+    allowed = channel_allowlist()
     return CapabilitiesResponse(
-        mobile=MobileCapabilitiesResponse(enabled=cap.enabled, backend=cap.backend)
+        mobile=MobileCapabilitiesResponse(enabled=cap.enabled, backend=cap.backend),
+        channel_kinds=sorted(allowed) if allowed is not None else None,
     )
 
 
