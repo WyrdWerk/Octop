@@ -1028,5 +1028,11 @@
       "win32": "请指导我在 Windows 上安装 Docker Desktop（含 WSL2 如需要），并确认安装后 `docker info` 可用。当前系统：{host}。",
       "other": "请帮我在当前系统（{host}）安装 Docker，并验证 `docker info` 可用。参考文档：{docs}"
     }
+  },
+  "browser": {
+    "navigate_failed": "导航到 {url} 失败：{error}"
+  },
+  "providers": {
+    "codex_oauth_timeout": "登录超时，请重新开始"
   }
 }

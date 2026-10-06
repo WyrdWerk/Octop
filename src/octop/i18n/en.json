@@ -1028,5 +1028,11 @@
       "win32": "Please guide me through installing Docker Desktop on Windows (including WSL2 if needed), and confirm `docker info` works after installation. Current system: {host}.",
       "other": "Please help me install Docker on the current system ({host}) and verify that `docker info` works. Reference: {docs}"
     }
+  },
+  "browser": {
+    "navigate_failed": "Failed to navigate to {url}: {error}"
+  },
+  "providers": {
+    "codex_oauth_timeout": "Login timed out; please start again"
   }
 }

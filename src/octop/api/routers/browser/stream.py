@@ -46,7 +46,9 @@ from octop.api.routers.browser.harness import (
     harness_page_url,
     resolve_harness_session,
 )
+from octop.i18n import tr
 from octop.infra.utils.browser_media import user_browser_profile
+from octop.infra.utils.locale import DEFAULT_LOCALE
 
 logger = logging.getLogger(__name__)
 
@@ -367,6 +369,7 @@ async def browser_stream_ws(
             is_connected=is_connected,
             receive_text=receive_text,
             user_id=int(user.id),
+            locale=getattr(user, "locale", None) or DEFAULT_LOCALE,
             listen_only=bool(listen_only),
             default_width=width,
             default_height=height,
@@ -385,6 +388,7 @@ async def run_browser_stream_session(
     is_connected: Any,
     receive_text: Any,
     user_id: int,
+    locale: str = DEFAULT_LOCALE,
     listen_only: bool = False,
     default_width: int = 1280,
     default_height: int = 800,
@@ -422,7 +426,9 @@ async def run_browser_stream_session(
                     await send_json(
                         {
                             "type": "error",
-                            "message": f"导航到 {start_url} 失败：{exc}",
+                            "message": tr(
+                                "browser.navigate_failed", locale, url=start_url, error=exc
+                            ),
                         },
                     )
 

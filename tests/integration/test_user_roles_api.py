@@ -97,7 +97,7 @@ async def test_builtin_roles_invite_reads_role_at_redeem(env):
         json={"role": "user", "note": "later"},
     )
     assert invite.status_code == 201, invite.text
-    assert invite.json()["role_name"] == "用户"
+    assert invite.json()["role_name"] == "User"
     assert invite.json()["role"] == "user"
     assert "user_role_id" not in invite.json()
     assert "system_role" not in invite.json()
@@ -131,7 +131,7 @@ async def test_builtin_roles_invite_reads_role_at_redeem(env):
     admin_id = me.json()["id"]
     admin_row = next(item for item in invited.json() if item["id"] == admin_id)
     assert admin_row["role"] == "admin"
-    assert admin_row["role_name"] == "管理员"
+    assert admin_row["role_name"] == "Administrator"
 
 
 async def test_role_patch_without_policies_keeps_existing_policies(env):
