@@ -288,7 +288,8 @@
     "groupNameRequired": "Enter a group name",
     "saveFailed": "Could not save the navigation layout",
     "dragToReorder": "Drag to reorder",
-    "chatHistory": "Session list"
+    "chatHistory": "Session list",
+    "newVersionBadgeShort": "New"
   },
   "skillPackages": {
     "title": "Skill Packages",
@@ -1670,7 +1671,10 @@
     "historyRetry": "Retry",
     "creatingSession": "Creating session…",
     "resizePopup": "Resize window",
-    "unreadMessages": "Unread messages"
+    "unreadMessages": "Unread messages",
+    "weatherSunny": "Sunny",
+    "weatherRainy": "Rainy",
+    "weatherCloudy": "Cloudy"
   },
   "tools": {
     "unknown": "Unknown tool",
@@ -2766,7 +2770,11 @@
     "readAloud": "Read aloud",
     "micNotAvailable": "Audio recording unavailable — please use HTTPS",
     "sttNotAvailable": "Voice input not available on this device (HTTPS required)",
-    "ttsAutoplayBlocked": "Autoplay blocked by browser — tap read-aloud again"
+    "ttsAutoplayBlocked": "Autoplay blocked by browser — tap read-aloud again",
+    "mimoVoiceBingtang": "Bingtang (Chinese, female)",
+    "mimoVoiceMoli": "Moli (Chinese, female)",
+    "mimoVoiceSuda": "Suda (Chinese, male)",
+    "mimoVoiceBaihua": "Baihua (Chinese, male)"
   },
   "security": {
     "intro": "Configure runtime security policies for agents. Running agents reload automatically after save.",
@@ -4821,7 +4829,8 @@
       "deleteConfirm": "Delete shared provider \"{{name}}\"? All users will lose access to this provider.",
       "deleteSuccess": "Shared provider \"{{name}}\" deleted",
       "createSuccess": "Shared provider \"{{name}}\" created",
-      "createFailed": "Create failed"
+      "createFailed": "Create failed",
+      "loadFailed": "Failed to load shared providers"
     }
   },
   "wizard": {
@@ -5099,7 +5108,8 @@
     "browseLoadFailed": "Failed to load subdirectory",
     "browseDownloadOnly": "This file cannot be previewed. Download it instead?",
     "browse_not_text": "This file is not valid UTF-8 text. Download it instead.",
-    "browse_too_large": "File is too large to preview or download in the browser."
+    "browse_too_large": "File is too large to preview or download in the browser.",
+    "loadBackendsFailed": "Failed to load storage backends"
   },
   "adminAgents": {
     "total": "{{count}} agents",
@@ -6040,7 +6050,8 @@
     "deleteConfirm": "This custom runner will be removed.",
     "deleteSuccess": "Runner deleted",
     "docsHint": "Install an ACP-compatible agent locally (opencode, codebuddy --acp, etc.) before enabling a runner.",
-    "chatPermissionTitle": "External agent permission required"
+    "chatPermissionTitle": "External agent permission required",
+    "respondPermissionMessage": "Please call acp_runner to respond to the external ACP permission request: action=\"respond\", {{runnerPart}}message=\"{{optionId}}\""
   },
   "plugins": {
     "loadError": "Failed to load plugins",
@@ -6444,7 +6455,23 @@
   "pwa": {
     "updateReady": "A new version is ready",
     "updateNow": "Update now",
-    "later": "Later"
+    "later": "Later",
+    "addToHomeScreen": "Add to Home Screen",
+    "iosGuideDesc": "Install Octop as an app and open it with one tap anytime.",
+    "iosStep1Before": "Tap the",
+    "iosStep1After": "Share button in the bottom toolbar",
+    "iosStep2": "Scroll down and tap \"Add to Home Screen\"",
+    "iosStep3": "Tap \"Add\" in the top-right corner to finish",
+    "installAsDesktopApp": "Install as desktop app",
+    "desktopGuideDesc": "The browser isn't ready for one-click install yet. Follow the steps below, or refresh the page and click the install button in the header again.",
+    "desktopStep1Before": "Look for the",
+    "desktopStep1After": "install icon on the right side of the address bar and click it",
+    "desktopStep2Edge": "Or open the browser menu and choose \"Apps\" → \"Install Octop\"",
+    "desktopStep2": "Or open the browser menu and choose \"Install Octop\"",
+    "desktopStep3": "After installing, open it with one click from your desktop or dock",
+    "desktopHttpsHint": "When accessing via a LAN IP, HTTPS is required — otherwise the browser won't offer an install option.",
+    "installApp": "Install app",
+    "install": "Install"
   },
   "browser": {
     "recordReplay": {
@@ -6455,7 +6482,8 @@
       "startFailed": "Failed to start recording",
       "started": "Browser recording started",
       "stop": "Stop browser recording",
-      "noRecording": "Finish a browser recording first"
+      "noRecording": "Finish a browser recording first",
+      "goalPrompt": "🎬 Recording started!\n\nPlease enter your **task goal** (it becomes the skill name and trigger keyword), e.g. \"Log into the OA system\" or \"Check the weather\"."
     }
   },
   "shortcut": {
@@ -6465,7 +6493,35 @@
     "applyFailed": "Failed to apply skill",
     "recordingStopped": "Recording finished — captured {{steps}} replay steps",
     "skillApplied": "Skill \"{{name}}\" applied",
-    "stopFailed": "Failed to stop recording"
+    "stopFailed": "Failed to stop recording",
+    "autoRecordingStartedMessage": "🎬 Recording started! Perform the actions you want to automate in the browser.\n\nWhen you're done, type \"end\" to stop recording and the system will generate a skill script automatically.",
+    "previewTruncated": "... ({{count}} lines total; the full content will be saved after you confirm)",
+    "recordingDoneMessage": "✅ Recording finished! Generated {{steps}} replay steps.",
+    "scriptPreviewHeading": "📝 **Skill script preview:**",
+    "confirmToApplyHint": "Reply \"confirm\" to apply this skill. You can then replay the same workflow in one click.",
+    "scriptGenerationFailedMessage": "⚠️ Failed to generate the skill script. Please try again later or generate it manually.",
+    "skillAppliedMessage": "🎉 Skill **{{name}}** applied successfully!\n\nYou can now enter a related instruction in chat to replay the same browser workflow in one click.",
+    "browserPanel": {
+      "objectiveSetMsg": "✅ Task goal set: **{{objective}}**\n\nNow describe the specific actions you want the AI assistant to perform in the browser.\n\nFor example: \"Open YouTube, Reddit and Google, and search for today's weather\".\n\nOnce you've described it, the AI will carry out the actions automatically; when they're done, type \"end\" to stop recording.",
+      "previewTruncated": "... ({{total}} lines in total; the full content will be saved after you confirm)",
+      "recordingDoneMsg": "✅ Recording finished! Generated {{steps}} replay steps.",
+      "scriptPreviewHeading": "📝 **Script preview for skill \"{{name}}\":**",
+      "replyConfirmHint": "Reply \"confirm\" to apply this skill.",
+      "afterApplyHint": "Once applied, just type **\"{{name}}\"** to replay the same workflow in one go.",
+      "scriptGenFailedMsg": "⚠️ Failed to generate the skill script. Please try again later.",
+      "skillAppliedMsg": "🎉 Skill **\"{{name}}\"** applied successfully!\n\nFrom now on, just type **\"{{name}}\"** to replay the same browser workflow in one go.",
+      "replayNoRecordingMsg": "⚠️ Couldn't find a recording for skill \"{{name}}\"; replay failed.",
+      "recordingNotFound": "Recording not found",
+      "replayDoneMsg": "🎬 Browser-Skill \"{{name}}\" replay finished!",
+      "stepFailedLine": "Step {{id}} ({{kind}}): {{error}}",
+      "stepExecFailed": "Execution failed",
+      "replayFailedMsg": "⚠️ Replay of skill \"{{name}}\" failed:\n{{detail}}",
+      "replayErrorMsg": "⚠️ Skill replay error: {{error}}",
+      "replayAllPassedMsg": "🔄 Skill replay finished! All steps ran successfully.",
+      "replayFailedShortMsg": "⚠️ Skill replay failed: {{error}}",
+      "replayingMsg": "🔄 Replaying with skill \"{{name}}\"...",
+      "stillRecordingMsg": "💡 Recording is still in progress. If you're done, type \"end\" to stop recording and generate the skill script."
+    }
   },
   "skillRecordGuide": {
     "buttonLabel": "Skill recording",
@@ -6484,5 +6540,88 @@
     "step4Desc": "When finished, type \"结束\" (or \"end\") to stop; after confirmation the skill is saved under the task goal. Type the goal keyword later to replay it.",
     "envNotReady": "Browser environment required first",
     "title": "Skill recording guide"
+  },
+  "backendBuilder": {
+    "hintLocalShell": "Local shell + filesystem (full access to the host)",
+    "hintFilesystem": "Restricted local filesystem (read/write only under root_dir)",
+    "hintState": "In-process state; lost on restart",
+    "hintStore": "Key-value storage, good for temporary data",
+    "hintS3": "AWS S3 / S3-compatible object storage",
+    "hintCos": "Tencent Cloud COS (S3-compatible)",
+    "hintPostgres": "Postgres database backend",
+    "backendTooltip": "Decides the backend the agent uses for tools and file reads/writes. Composite mode routes to different backends by path prefix.",
+    "modeIndependent": "Independent backend (single type)",
+    "modeComposite": "Composite (route by path)",
+    "defaultBackendHint": "Requests that match no route prefix fall through to here",
+    "addRoute": "Add route"
+  },
+  "pwaDebug": {
+    "swSupport": "Service Worker support",
+    "supported": "Supported",
+    "swUnsupported": "Browser does not support Service Workers",
+    "swRegState": "SW registration state",
+    "swRegNone": "No Service Worker registration found",
+    "swControl": "SW controls current page",
+    "swNotControlling": "SW is not controlling the current page (reload or clientsClaim needed)",
+    "iconLoadFailed": "{{src}}: failed to load",
+    "iconSizeMismatch": "{{src}}: declared {{sizes}}, actual {{width}}x{{height}}",
+    "iconCheckError": "{{src}}: validation error",
+    "iconSizes": "Icon sizes match manifest",
+    "iconsChecked": "Checked {{count}} icons",
+    "manifestJsonParseFailed": "HTTP {{status}} but JSON parsing failed",
+    "manifestBlocked": "HTTP {{status}} — blocked or 404",
+    "manifestReachable": "manifest.json is reachable",
+    "manifestFetchFailed": "fetch failed: {{message}} (possibly blocked by an auth proxy)",
+    "swFetch": "sw.js is reachable and not hard-cached",
+    "fetchFailed": "fetch failed: {{message}}",
+    "bipState": "beforeinstallprompt status",
+    "seeLiveStatus": "See live status below",
+    "runMode": "Current run mode",
+    "modeStandalone": "standalone (installed mode)",
+    "modeBrowserTab": "browser tab",
+    "dismissedLabel": "User clicked \"Don't install\"",
+    "dismissedSet": "Set (see below for how to clear)",
+    "dismissedNotSet": "Not set",
+    "bipCaptured": "beforeinstallprompt captured",
+    "bipCapturedYes": "✓ Event captured, install can be triggered",
+    "bipCapturedNo": "Not captured (Chrome did not send the event after internal evaluation; may be in a cooldown period)",
+    "swReadyLabel": "Frontend swReady status",
+    "swReadyTrue": "swReady=true (button should be visible)",
+    "swReadyFalse": "swReady=false (pwa-prompt.ts failed to detect SW; button hidden)",
+    "clearedReload": "Cleared. Please reload the page.",
+    "installResult": "Install result: {{result}}",
+    "logForceStart": "[force] Clearing local dismiss flag, trying to trigger the install dialog…",
+    "logForceIos": "[force] iOS requires manual \"Add to Home Screen\"; guide opened",
+    "logForceWaiting": "[force] beforeinstallprompt not captured yet, waiting 3 seconds…",
+    "installAccepted": "Install accepted. The app should appear in your Dock/Launchpad.",
+    "installDismissed": "The install dialog appeared and you chose Cancel.",
+    "logForceManual": "[force] Browser does not offer programmatic install; opening manual install guide",
+    "logWaitStart": "[wait] Waiting 8 seconds for beforeinstallprompt...",
+    "logWaitCaptured": "[wait] ✓ Event captured",
+    "logWaitTimeout": "[wait] ✗ Not fired within 8 seconds; Chrome is in a cooldown period or evaluation failed",
+    "resetConfirm": "This will unregister the current Service Worker and clear all PWA state. Reset now?\nThe page will reload automatically when done.",
+    "logResetDone": "[reset] SW unregistered + caches cleared, reloading",
+    "title": "PWA diagnostics",
+    "subtitle": "Open this page on your phone to check whether PWA install requirements are met",
+    "forceInstalling": "Attempting install…",
+    "forceInstall": "Force install attempt",
+    "copied": "Copied ✓",
+    "copyReport": "Copy diagnostic report",
+    "clearDismissed": "Clear \"Don't install\" flag",
+    "waitPrompt": "Wait for install event (8s)",
+    "resetPwa": "Reset PWA state (unregister SW)",
+    "directPrompt": "Prompt directly (captured)",
+    "notesTitle": "Notes:",
+    "noteSwTitle": "SW not controlling the current page",
+    "noteSwBody": ": normal; just reload after the first visit",
+    "noteBipTitle": "beforeinstallprompt not captured",
+    "noteBipBody": ": Chrome only fires it after enough \"engagement\". Use the site normally for a few minutes, close it, and reopen it a few hours or a day later; Chrome will then show the install banner automatically",
+    "noteManifestTitle": "manifest blocked",
+    "noteManifestBody": ": allow /manifest.json in your reverse proxy / gateway whitelist",
+    "noteDismissedTitle": "\"Don't install\" flag set",
+    "noteDismissedBody": ": click the \"Clear\" button, then reload",
+    "noteForceTitle": "Force install attempt",
+    "noteForceBody": ": clears the local dismiss flag, then calls beforeinstallprompt; if the browser has not sent that event, the manual install guide opens (a web page cannot bypass Chrome's own prompt rules)",
+    "noteCopy": "Click \"Copy diagnostic report\" and send the results to the developers"
   }
 }
