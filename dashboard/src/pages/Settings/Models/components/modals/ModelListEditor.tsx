@@ -651,7 +651,10 @@ export function ModelListEditor({
                             <div style={{ display: "flex", gap: 12 }}>
                               <Form.Item
                                 name="reasoning_toggle"
-                                label={t("models.reasoningToggle", "允许开关")}
+                                label={t(
+                                  "models.reasoningToggle",
+                                  "Allow toggle",
+                                )}
                                 valuePropName="checked"
                                 initialValue
                                 style={{ flex: 1, marginBottom: 10 }}
@@ -660,7 +663,10 @@ export function ModelListEditor({
                               </Form.Item>
                               <Form.Item
                                 name="reasoning_default_mode"
-                                label={t("models.reasoningDefault", "默认思考")}
+                                label={t(
+                                  "models.reasoningDefault",
+                                  "Default thinking",
+                                )}
                                 initialValue="auto"
                                 style={{ flex: 1, marginBottom: 10 }}
                               >
@@ -668,18 +674,15 @@ export function ModelListEditor({
                                   options={[
                                     {
                                       value: "auto",
-                                      label: t("chat.reasoningAuto", "自动"),
+                                      label: t("chat.reasoningAuto", "Auto"),
                                     },
                                     {
                                       value: "enabled",
-                                      label: t("chat.reasoningEnabled", "开启"),
+                                      label: t("chat.reasoningEnabled", "On"),
                                     },
                                     {
                                       value: "disabled",
-                                      label: t(
-                                        "chat.reasoningDisabled",
-                                        "关闭",
-                                      ),
+                                      label: t("chat.reasoningDisabled", "Off"),
                                     },
                                   ]}
                                 />
@@ -689,7 +692,7 @@ export function ModelListEditor({
                               name="reasoning_efforts"
                               label={t(
                                 "models.reasoningEfforts",
-                                "支持的思考强度",
+                                "Supported thinking efforts",
                               )}
                               style={{ marginBottom: 10 }}
                             >
@@ -704,7 +707,7 @@ export function ModelListEditor({
                                 name="reasoning_default_effort"
                                 label={t(
                                   "models.reasoningDefaultEffort",
-                                  "默认强度",
+                                  "Default effort",
                                 )}
                                 style={{ flex: 1, marginBottom: 10 }}
                               >
@@ -714,7 +717,7 @@ export function ModelListEditor({
                                 name="reasoning_effort_type"
                                 label={t(
                                   "models.reasoningEffortType",
-                                  "强度类型",
+                                  "Effort type",
                                 )}
                                 initialValue="enum"
                                 style={{ flex: 1, marginBottom: 10 }}
@@ -725,14 +728,14 @@ export function ModelListEditor({
                                       value: "enum",
                                       label: t(
                                         "models.reasoningEffortEnum",
-                                        "强度档位",
+                                        "Effort levels",
                                       ),
                                     },
                                     {
                                       value: "token_budget",
                                       label: t(
                                         "models.reasoningEffortBudget",
-                                        "Token 预算",
+                                        "Token budget",
                                       ),
                                     },
                                   ]}
@@ -741,7 +744,10 @@ export function ModelListEditor({
                             </div>
                             <Form.Item
                               name="reasoning_adapter"
-                              label={t("models.reasoningAdapter", "推理协议")}
+                              label={t(
+                                "models.reasoningAdapter",
+                                "Reasoning protocol",
+                              )}
                               initialValue="thinking"
                               style={{ marginBottom: 10 }}
                             >
@@ -751,7 +757,7 @@ export function ModelListEditor({
                                     value: "status_only",
                                     label: t(
                                       "models.reasoningAdapterStatusOnly",
-                                      "仅标记（始终推理）",
+                                      "Status only (always reasoning)",
                                     ),
                                   },
                                   {
@@ -786,14 +792,14 @@ export function ModelListEditor({
                                     value: "thinking_nested_effort",
                                     label: t(
                                       "models.reasoningAdapterNestedEffort",
-                                      "TokenHub 嵌套强度",
+                                      "TokenHub nested effort",
                                     ),
                                   },
                                   {
                                     value: "dashscope",
                                     label: t(
                                       "models.reasoningAdapterDashScope",
-                                      "DashScope / 阿里云",
+                                      "DashScope / Alibaba Cloud",
                                     ),
                                   },
                                   {

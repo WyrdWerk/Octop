@@ -5,6 +5,7 @@ import { useCallback, useEffect, useState } from "react";
 import type { ReactNode } from "react";
 import { getStorageLogo } from "../../../assets/storage";
 import { request } from "../../../api/request";
+import i18n from "../../../i18n";
 
 function storageBrandIcon(kind: string): ReactNode {
   const src = getStorageLogo(kind);
@@ -465,7 +466,11 @@ export function useStorageBackends(): UseStorageBackendsResult {
       );
       setBackends(Array.isArray(rows) ? rows : []);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "加载存储后端失败");
+      setError(
+        err instanceof Error
+          ? err.message
+          : i18n.t("storage.loadBackendsFailed"),
+      );
     } finally {
       setLoading(false);
     }
