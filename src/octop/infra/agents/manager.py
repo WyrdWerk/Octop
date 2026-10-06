@@ -2751,6 +2751,31 @@ class AgentManager:
             return None
         return owner.username or None
 
+    def _harness_language(self, row: AgentRow, cfg: dict[str, Any]) -> Locale:
+        """Language for harness templates / prompts: agent config, else owner locale.
+
+        ``octop_harness`` defaults ``HarnessAgentConfig.language`` to ``"zh"``;
+        Octop always passes it explicitly so workspace templates (AGENTS.md,
+        BOOTSTRAP.md, …), peer/team prompts and slash-skill prompts follow the
+        owner's locale and fall back to :data:`DEFAULT_LOCALE` (``"en"``).
+        """
+        from octop.infra.utils.locale import (  # noqa: PLC0415
+            DEFAULT_LOCALE,
+            locale_from_user_row,
+            normalize_locale,
+        )
+
+        explicit = cfg.get("language")
+        if isinstance(explicit, str) and explicit.strip():
+            return normalize_locale(explicit)
+        if row.user_id is None:
+            return DEFAULT_LOCALE
+        try:
+            owner = self._repos.user_repo.get(row.user_id)
+        except Exception:  # noqa: BLE001 — locale must never block agent start
+            return DEFAULT_LOCALE
+        return locale_from_user_row(owner)
+
     @staticmethod
     def _spec_is_opensandbox(spec: Any) -> bool:
         return isinstance(spec, dict) and str(spec.get("type") or "").lower() == "opensandbox"
@@ -2858,6 +2883,7 @@ class AgentManager:
                 expert_dir=expert_dir,
                 workspace=workspace,
                 seed_paths=expert.files,
+                locale=self._harness_language(row, self._agent_config_dict(row)),
             )
         except Exception as exc:
             logger.warning(
@@ -3387,6 +3413,8 @@ class AgentManager:
             **_memory_extract_settings(cfg, is_ref_usable=self._providers.is_model_ref_usable),
             **_resolve_memory_backend_kwargs(cfg, workspace_dir=workspace_dir, config=self._config),
         )
+        if "language" in _HARNESS_AGENT_CONFIG_FIELDS:
+            harness_cfg.language = self._harness_language(row, cfg)
         if "tools_disabled" in _HARNESS_AGENT_CONFIG_FIELDS:
             from octop.infra.agents.settings.tool_catalog import effective_tools_disabled
             from octop.infra.agents.teams import host_tools_disabled

@@ -27,6 +27,7 @@ def ctx():
         thread_registry=MagicMock(),
         user_repo=SimpleNamespace(get=lambda uid: SimpleNamespace(disabled=0)),
         agent_manager=SimpleNamespace(memory_slim=coordinator),
+        locale="zh",
     )
 
 

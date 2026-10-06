@@ -94,7 +94,7 @@ class VoiceManager:
         audio: bytes,
         *,
         mime: str,
-        language: str = "zh-CN",
+        language: str = "en-US",
         provider_name: str | None = None,
     ) -> adapters.STTResult:
         name = provider_name or self.get_active()["stt"]

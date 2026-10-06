@@ -152,7 +152,7 @@ def _authorize_setup_mid_wizard(authorization: str | None, server: Any) -> str |
     raise OctopError(ErrorCode.SETUP_TOKEN_INVALID, "invalid or expired wizard token")
 
 
-async def _bootstrap_default_agent(server: Any, *, user_id: int, locale: str = "zh") -> None:
+async def _bootstrap_default_agent(server: Any, *, user_id: int, locale: str = "en") -> None:
     """Create the first default agent for a fresh install (pinned id ``main``)."""
     from octop.infra.agents.experts.default_agent import (
         SETUP_DEFAULT_AGENT_ID,

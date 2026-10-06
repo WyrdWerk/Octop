@@ -376,3 +376,30 @@ async def test_apply_workspace_quick_prompts_refuses_invalid_json() -> None:
     with pytest.raises(OctopError) as exc:
         await apply_workspace_quick_prompts(workspace, [])
     assert exc.value.code is ErrorCode.SLASH_BAD_ARGS
+
+
+@pytest.mark.asyncio
+async def test_seed_expert_directory_applies_locale_overlay(tmp_path: Path) -> None:
+    from octop.infra.agents.experts.catalog import discover_seed_paths, seed_expert_directory
+
+    expert_dir = tmp_path / "loc-expert"
+    (expert_dir / "locales" / "en").mkdir(parents=True)
+    _write_manifest(expert_dir)
+    (expert_dir / "SOUL.md").write_text("中文人格", encoding="utf-8")
+    (expert_dir / "locales" / "en" / "SOUL.md").write_text("English persona", encoding="utf-8")
+
+    assert discover_seed_paths(expert_dir) == ["SOUL.md"]
+
+    uploads: dict[str, list[tuple[str, bytes]]] = {}
+
+    class _Ws:
+        def __init__(self, key: str) -> None:
+            self.key = key
+
+        async def aupload_many(self, pairs: list[tuple[str, bytes]]) -> None:
+            uploads[self.key] = pairs
+
+    await seed_expert_directory(expert_dir=expert_dir, workspace=_Ws("en"), locale="en")
+    await seed_expert_directory(expert_dir=expert_dir, workspace=_Ws("zh"), locale="zh")
+    assert dict(uploads["en"])["SOUL.md"] == b"English persona"
+    assert dict(uploads["zh"])["SOUL.md"] == "中文人格".encode()

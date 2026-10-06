@@ -50,6 +50,7 @@ def ctx(tmp_path: Path):
             paths=paths,
             octop_version="0.1.0",
             server_started_at=1_700_000_000,
+            locale="zh",
         ),
         manager,
         registry,

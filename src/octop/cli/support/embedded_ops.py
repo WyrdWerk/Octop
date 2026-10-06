@@ -81,7 +81,7 @@ def probe_provider(provider_id: int, *, model_id: str | None = None) -> dict[str
 
 
 async def test_channel_async(
-    agent_id: str, channel_id: str, *, locale: str = "zh"
+    agent_id: str, channel_id: str, *, locale: str = "en"
 ) -> dict[str, Any]:
     from octop.infra.utils.locale import normalize_locale
 
@@ -95,5 +95,5 @@ async def test_channel_async(
         return await gateway.probe_channel(channel_id, locale=loc)
 
 
-def test_channel(agent_id: str, channel_id: str, *, locale: str = "zh") -> dict[str, Any]:
+def test_channel(agent_id: str, channel_id: str, *, locale: str = "en") -> dict[str, Any]:
     return asyncio.run(test_channel_async(agent_id, channel_id, locale=locale))

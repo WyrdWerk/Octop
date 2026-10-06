@@ -113,7 +113,7 @@ async def set_active_voice(
 @router.post("/stt")
 async def transcribe_audio(
     audio: UploadFile = File(...),
-    language: str = Form(default="zh-CN"),
+    language: str = Form(default="en-US"),
     provider: str | None = Form(default=None),
     _: Any = Depends(current_user),
     server: Any = Depends(get_server),

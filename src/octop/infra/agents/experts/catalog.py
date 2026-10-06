@@ -27,6 +27,12 @@ from octop.infra.errors import ErrorCode, OctopError
 logger = logging.getLogger(__name__)
 
 MANIFEST_FILENAME = "manifest.json"
+LOCALE_OVERLAY_DIR = "locales"
+"""Optional ``library/<id>/locales/<locale>/<rel>`` overrides for seed files.
+
+Seeding with a locale replaces ``<rel>`` with the translated copy when present
+(e.g. ``locales/en/SOUL.md``); the overlay tree itself is never seeded.
+"""
 """Expert template / published-snapshot welcome metadata filename (dir root)."""
 
 WORKSPACE_MANIFEST_PATH = f"{DEFAULT_SYSTEM_FILES_PATH}/{MANIFEST_FILENAME}"
@@ -157,8 +163,18 @@ def discover_seed_paths(expert_dir: Path) -> list[str]:
         rel = fpath.relative_to(expert_dir)
         if rel.as_posix() == MANIFEST_FILENAME:
             continue
+        if rel.parts and rel.parts[0] == LOCALE_OVERLAY_DIR:
+            continue
         paths.append(rel.as_posix())
     return paths
+
+
+def _locale_overlay_file(expert_dir: Path, rel: str, locale: str | None) -> Path | None:
+    """Return ``<expert_dir>/locales/<locale>/<rel>`` when a translated copy exists."""
+    if not locale:
+        return None
+    candidate = expert_dir / LOCALE_OVERLAY_DIR / locale / rel
+    return candidate if candidate.is_file() else None
 
 
 def preview_file_paths(expert: Expert) -> list[str]:
@@ -216,8 +232,12 @@ async def seed_expert_directory(
     expert_dir: Path,
     workspace: BackendWorkspace,
     seed_paths: list[str] | None = None,
+    locale: str | None = None,
 ) -> int:
     """Upload expert template files into *workspace*, including welcome manifest.
+
+    When *locale* is given, files with a ``locales/<locale>/<rel>`` overlay are
+    seeded from the overlay instead of the base copy.
 
     ``seed_paths`` / :func:`discover_seed_paths` omit the library manifest so
     catalog ``Expert.files`` stays seed-content only; this helper always
@@ -230,7 +250,8 @@ async def seed_expert_directory(
         fpath = expert_dir / rel
         if not fpath.is_file():
             continue
-        pairs.append((rel.lstrip("/"), fpath.read_bytes()))
+        overlay = _locale_overlay_file(expert_dir, rel.lstrip("/"), locale)
+        pairs.append((rel.lstrip("/"), (overlay or fpath).read_bytes()))
     manifest_path = expert_dir / MANIFEST_FILENAME
     if manifest_path.is_file():
         pairs.append((WORKSPACE_MANIFEST_PATH, manifest_path.read_bytes()))
@@ -896,7 +917,7 @@ def build_create_spec_from_expert(
     user_id: int,
     name: str | None = None,
     description: str | None = None,
-    locale: str = "zh",
+    locale: str = "en",
     default_model: str | None = None,
     config_extra: dict[str, Any] | None = None,
     runtime_config: dict[str, Any] | None = None,
