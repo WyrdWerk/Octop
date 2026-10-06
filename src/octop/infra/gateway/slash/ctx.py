@@ -40,7 +40,7 @@ class SlashCtx:
     locale: str = "en"
     """Dashboard composer / turn ``metadata.model`` (``provider/model``), if any."""
     model_ref: str | None = None
-    default_timezone: str = "Asia/Shanghai"
+    default_timezone: str = "UTC"
 
 
 def lang_of(ctx: SlashCtx) -> Locale:
@@ -142,7 +142,7 @@ def build_slash_ctx(
     if not timezone and agent_manager is not None:
         timezone = (agent_manager.octop_config.default_timezone or "").strip()
     if not timezone:
-        timezone = "Asia/Shanghai"
+        timezone = "UTC"
     return SlashCtx(
         agent_id=agent_id,
         user_id=user_id,

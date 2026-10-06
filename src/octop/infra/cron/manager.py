@@ -62,7 +62,7 @@ class CronManager:
         gateway: Gateway,
         delivery_service: CronDeliveryService,
         repos: RepoBundle,
-        timezone: str = "Asia/Shanghai",
+        timezone: str = "UTC",
     ) -> None:
         self._gateway = gateway
         self._delivery_service = delivery_service

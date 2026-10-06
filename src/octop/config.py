@@ -130,7 +130,7 @@ class OctopConfig:
     login_max_attempts: int = 5
     login_lockout_seconds: int = 900
     cors_origins: list[str] = field(default_factory=list)
-    default_timezone: str = "Asia/Shanghai"
+    default_timezone: str = "UTC"
     enable_dashboard: bool = True
     enable_api_docs: bool = False
     history_v2_enabled: bool = False
@@ -604,7 +604,7 @@ def load_config(path: Path) -> OctopConfig:
         login_max_attempts=int(merged.get("login_max_attempts", 5)),
         login_lockout_seconds=int(merged.get("login_lockout_seconds", 900)),
         cors_origins=list(merged.get("cors_origins") or []),
-        default_timezone=str(merged.get("default_timezone") or "Asia/Shanghai"),
+        default_timezone=str(merged.get("default_timezone") or "UTC"),
         enable_dashboard=bool(merged["enable_dashboard"]),
         enable_api_docs=bool(merged["enable_api_docs"]),
         history_v2_enabled=_coerce_bool(

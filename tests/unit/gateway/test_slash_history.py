@@ -78,7 +78,7 @@ async def test_cmd_history_formats_last_active(ctx: SlashCtx) -> None:
     sink = BufferSink()
     await cmd_history(build_default_dispatcher(), SlashCommand("history", ""), ctx, sink)
     text = "\n".join(sink.lines)
-    assert "2023-11-15 06:13:20" in text
+    assert "2023-11-14 22:13:20" in text
     assert "1700000000" not in text
 
 

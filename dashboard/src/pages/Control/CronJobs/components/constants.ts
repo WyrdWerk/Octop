@@ -5,6 +5,7 @@ export const TIMEZONE_OPTIONS = [
   { value: "Asia/Seoul", label: "Asia/Seoul (UTC+9)" },
   { value: "Asia/Hong_Kong", label: "Asia/Hong_Kong (UTC+8)" },
   { value: "Asia/Singapore", label: "Asia/Singapore (UTC+8)" },
+  { value: "Asia/Kolkata", label: "Asia/Kolkata (UTC+5:30)" },
   { value: "Asia/Dubai", label: "Asia/Dubai (UTC+4)" },
   { value: "Europe/London", label: "Europe/London (UTC+0)" },
   { value: "Europe/Paris", label: "Europe/Paris (UTC+1)" },

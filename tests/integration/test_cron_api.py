@@ -172,7 +172,7 @@ async def test_cron_settings_returns_timezone(env: Any) -> None:
     c, _srv, alice_auth, _bob_auth, _aid = env
     r = await c.get("/api/cron/settings", headers=alice_auth)
     assert r.status_code == 200
-    assert r.json() == {"timezone": "Asia/Shanghai"}
+    assert r.json() == {"timezone": "UTC"}
 
 
 async def test_cron_examples_missing_field_uses_name_defaults(env: Any) -> None:
@@ -243,7 +243,7 @@ async def test_settings_timezone_returns_default(env: Any) -> None:
     c, _srv, alice_auth, _bob_auth, _aid = env
     r = await c.get("/api/settings/timezone", headers=alice_auth)
     assert r.status_code == 200
-    assert r.json() == {"timezone": "Asia/Shanghai"}
+    assert r.json() == {"timezone": "UTC"}
 
 
 async def test_settings_upload_returns_default_limit(env: Any) -> None:

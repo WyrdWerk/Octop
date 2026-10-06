@@ -98,12 +98,12 @@ class ProactiveCareService:
         gateway: Gateway,
         care_push_repo: CarePushRepo,
         agent_manager: AgentManager,
-        timezone: str = "Asia/Shanghai",
+        timezone: str = "UTC",
     ) -> None:
         self._gateway = gateway
         self._care_push_repo = care_push_repo
         self._agent_manager = agent_manager
-        self._timezone = timezone or "Asia/Shanghai"
+        self._timezone = timezone or "UTC"
         self._picker = EpisodePicker(
             top_k=3,
             window_days=_DEFAULT_WINDOW_DAYS,
