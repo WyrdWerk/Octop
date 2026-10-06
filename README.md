@@ -39,6 +39,25 @@
 
 ---
 
+> [!IMPORTANT]
+> **This is the WyrdWerk global fork** of [TencentCloud/Octop](https://github.com/TencentCloud/Octop) — English-first and built for use outside mainland China. Work happens on the **`global`** branch; `main` mirrors upstream.
+>
+> What's different from upstream (full record: **[docs/global-fork.md](docs/global-fork.md)**):
+> - **English by default** across the dashboard, API messages, slash commands and agent language; 中文 remains selectable.
+> - **Composio connector** plus a global connector allowlist (Composio, Notion, Dify, OpenAlex, WeKnora, IMAP mail, Custom MCP); China-only connectors are hidden, not deleted.
+> - **Channels:** Telegram, Discord and MQTT by default; Feishu/DingTalk/QQ/WeCom/WeChat hidden.
+> - **Privacy:** no default web search via the third-party searchfree.site; PyPI self-update disabled (it would overwrite the fork); China mirrors opt-in.
+> - OpenAI / Anthropic / OpenRouter first among model providers; UTC default timezone.
+>
+> **Run the fork with Docker** (the one-line installers below still install upstream's PyPI package):
+> ```bash
+> git clone -b global https://github.com/WyrdWerk/Octop.git && cd Octop
+> bash docker/docker_build.sh octop-global:latest   # needs Docker with buildx
+> docker run -d -p 8088:8088 -v octop-data:/data/.octop -e HOME=/data \
+>   -e OCTOP_DEFAULT_PASSWORD='<password>' octop-global:latest
+> ```
+> Every behaviour change is switchable via env vars — see the [configuration reference](docs/global-fork.md#configuration-reference).
+
 **Octop** is an open-source, self-hosted AI assistant. It's not just a tool — it's a digital life form that can operate in parallel. Through its multi-agent architecture, it builds an intelligent environment that is both independent and collaborative for teams, families, and individuals. Best of all, it runs entirely on your machine — the fully self-hosted design means privacy is never a compromise, while single-process startup makes the powerful web console, CLI, and IM integrations readily accessible.
 
 Chat through the Web Dashboard, Feishu, DingTalk, QQ, WeChat, Telegram, Discord, WeCom, or programmatic HTTP/SSE/WebSocket. Extend capabilities with the **expert library**, **Connectors** (OAuth + MCP), and **ACP** integration for IDE workflows.

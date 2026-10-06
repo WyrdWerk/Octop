@@ -38,6 +38,12 @@ Legacy per-agent `config_json.acp.runners` is migrated to the user-global store 
 
 Install the CLI on the host where `octop run` executes, ensure it is on `PATH` (or set an absolute `command` in the runner drawer). Built-in runners cannot be deleted; custom runners can be added from **Add runner**.
 
+> **Docker (WyrdWerk fork):** runners are spawned *inside the Octop container*. The stock image has no
+> Node.js/npx or agent CLIs, so built-in runners fail there until you extend the image (install Node,
+> then e.g. `@zed-industries/claude-agent-acp`, `opencode`) and pass the agent's credentials
+> (`ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, …) as container env vars. See
+> [global-fork.md](global-fork.md#acp-coding-agent-runners-in-docker).
+
 ### Enable delegation in chat
 
 1. Configure and enable at least one runner on `/acp`.

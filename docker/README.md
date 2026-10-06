@@ -4,6 +4,13 @@
 
 This directory contains the Docker build and deployment assets for Octop.
 
+> **WyrdWerk global fork:** build from the `global` branch. Docker is the supported way to run the
+> fork (the PyPI installers still install upstream). The build needs Docker with **buildx** (BuildKit
+> cache mounts). Fork-specific env knobs (connector/channel allowlists, web search, self-update) are
+> listed in [docs/global-fork.md](../docs/global-fork.md#configuration-reference). The image has no
+> Node.js, so ACP coding-agent runners need an extended image — see
+> [ACP in Docker](../docs/global-fork.md#acp-coding-agent-runners-in-docker).
+
 ### Files
 
 | File | Description |

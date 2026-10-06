@@ -2,6 +2,32 @@
 
 Navigation guide for AI coding agents working in this repository.
 
+## 0. Fork context — read first
+
+This is **WyrdWerk/Octop**, an English-first global fork of TencentCloud/Octop. The full record of
+fork changes, config knobs, build/deploy steps, test baseline and known gaps is
+**[docs/global-fork.md](docs/global-fork.md)** — read it before changing behaviour, and **update it in
+the same commit** whenever you add or change a fork-specific behaviour or knob.
+
+- **Branches:** commit fork work to `global` (default branch). `main` mirrors `upstream/main`; never
+  commit fork work there. Sync upstream with `git merge main` into `global`.
+- **Hide, don't delete:** China-specific connectors / channels / experts / plugins are filtered by
+  `OCTOP_CONNECTOR_ALLOWLIST`, `OCTOP_CHANNEL_ALLOWLIST`, `OCTOP_EXPERT_HIDDEN`, `OCTOP_PLUGIN_HIDDEN`
+  (`src/octop/infra/utils/region_defaults.py`). Extend those lists instead of deleting code.
+- **Don't rename internals** (`octop` package/CLI, `~/.octop`, `OCTOP_*`, `octop-*` libs).
+- **i18n is mandatory:** never add a hardcoded user-visible string in Chinese *or* English. Add a key to
+  both `dashboard/src/locales/{en,zh}.json` (UI) or `src/octop/i18n/{en,zh}.json` (backend) and use
+  `t(...)` / `tr(...)`. Only add keys — don't reorder or reformat these files (keeps merges clean).
+  English is the default locale everywhere (`DEFAULT_LOCALE = "en"`); keep `zh` branches working.
+- **Privacy defaults to preserve:** no searchfree.site web search unless opted in
+  (`OCTOP_WEB_SEARCH_PROVIDERS`), PyPI self-update off (`OCTOP_DISABLE_SELF_UPDATE`), China mirrors
+  opt-in (`OCTOP_USE_CN_MIRRORS`).
+- **Tests:** when an upstream test assumes the old default, pin the old setting in that test via env
+  (e.g. allowlist `*`) rather than reverting the default. Dashboard vitest has 6 known upstream
+  failures listed in docs/global-fork.md — anything else is a regression.
+- **Deploy:** Docker image from `global` (`bash docker/docker_build.sh`, needs buildx); the PyPI
+  installers still install upstream.
+
 ## 1. Collaboration principles
 
 > Favor caution over speed; trivial tasks may relax these rules. These principles complement [§10 Change workflow](#10-change-workflow) and [§11 Communication](#11-communication).
