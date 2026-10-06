@@ -3387,6 +3387,12 @@ class AgentManager:
             **_memory_extract_settings(cfg, is_ref_usable=self._providers.is_model_ref_usable),
             **_resolve_memory_backend_kwargs(cfg, workspace_dir=workspace_dir, config=self._config),
         )
+        if "web_search_tools" in _HARNESS_AGENT_CONFIG_FIELDS:
+            from octop.infra.agents.settings.web_search import resolve_web_search_policy
+
+            # Explicit provider list: never the harness "auto" default, which
+            # always mounts the third-party searchfree.site tool.
+            harness_cfg.web_search_tools = resolve_web_search_policy(cfg)
         if "tools_disabled" in _HARNESS_AGENT_CONFIG_FIELDS:
             from octop.infra.agents.settings.tool_catalog import effective_tools_disabled
             from octop.infra.agents.teams import host_tools_disabled
