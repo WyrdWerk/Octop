@@ -211,6 +211,28 @@ def _reasoning_profile(provider_id: str, model_id: str) -> dict[str, Any] | None
     return None
 
 
+# Global providers listed first (stable order); everything else, including the
+# China-region clouds, keeps the harness template order after them.
+PRIORITY_PRESET_IDS: tuple[str, ...] = (
+    "openai",
+    "anthropic",
+    "openrouter",
+    "gemini",
+    "openai-codex",
+    "groq",
+)
+
+
+def _prioritize(presets: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    rank = {pid: idx for idx, pid in enumerate(PRIORITY_PRESET_IDS)}
+    first = sorted(
+        (p for p in presets if str(p.get("id") or "") in rank),
+        key=lambda p: rank[str(p.get("id") or "")],
+    )
+    rest = [p for p in presets if str(p.get("id") or "") not in rank]
+    return [*first, *rest]
+
+
 def load_provider_presets() -> list[dict[str, Any]]:
     """Serialize octop-harness provider templates for API / CLI."""
     from importlib import resources
@@ -276,4 +298,4 @@ def load_provider_presets() -> list[dict[str, Any]]:
             if profile is not None:
                 model["reasoning"] = True
                 model["reasoning_config"] = profile
-    return out
+    return _prioritize(out)

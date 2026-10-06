@@ -104,3 +104,12 @@ def test_load_provider_presets_integration() -> None:
 
     go_ant = next(p for p in presets if p["id"] == "opencode-go-anthropic")
     assert go_ant["base_url"] == "https://opencode.ai/zen/go"
+
+
+def test_global_providers_listed_first():
+    from octop.infra.agents.providers.presets import load_provider_presets
+
+    ids = [p["id"] for p in load_provider_presets()]
+    assert ids[:4] == ["openai", "anthropic", "openrouter", "gemini"]
+    # China-region providers stay available further down.
+    assert "deepseek" in ids and ids.index("deepseek") > 3
