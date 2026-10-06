@@ -1,7 +1,11 @@
 id: meme-maker
-version: 0.1.0
+version: 0.1.1
 name: 表情包
 description: 用 memegen.link 生成梗图
+i18n:
+  en:
+    name: Meme Maker
+    description: Generate memes with memegen.link
 icon: icon.svg
 group: fun
 kind: tool

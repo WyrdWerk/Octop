@@ -704,6 +704,20 @@ def test_build_harness_config_includes_search_knowledge_without_cron(
     assert any(isinstance(item, KnowledgeSearchHintMiddleware) for item in (cfg.middleware or []))
 
 
+def test_build_harness_config_never_defaults_to_searchfree(
+    manager: AgentManager, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    for key in ("TAVILY_API_KEY", "OCTOP_WEB_SEARCH_PROVIDERS", "OCTOP_ENABLE_SEARCHFREE"):
+        monkeypatch.delenv(key, raising=False)
+    for key in ("BRAVE_API_KEY", "GOOGLE_API_KEY", "MOONSHOT_API_KEY"):
+        monkeypatch.delenv(key, raising=False)
+    cfg = manager._build_harness_config(_row(agent_id="AGT001"))
+    assert cfg.web_search_tools is False
+    monkeypatch.setenv("TAVILY_API_KEY", "tvly-test")
+    cfg = manager._build_harness_config(_row(agent_id="AGT001"))
+    assert cfg.web_search_tools == ["tavily"]
+
+
 def test_build_harness_config_defaults_local_shell_backend(manager: AgentManager) -> None:
     cfg = manager._build_harness_config(_row(agent_id="AGT001"))
     assert cfg.backend == _expected_default_backend(manager, "AGT001")

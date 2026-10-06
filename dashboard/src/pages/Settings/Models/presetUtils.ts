@@ -6,17 +6,38 @@ export interface PresetGroup {
   presets: ProviderPreset[];
 }
 
-/** Preset brand card order (swap Tencent Cloud / Aliyun vs pure alphabetical). */
+/** Preset brand card order (global brands first, then China-region clouds). */
 const PRESET_GROUP_ORDER = [
-  "tencent",
+  "opencode",
   "kimi",
   "minimax",
-  "opencode",
+  "zhipu",
   "siliconflow",
   "aliyun",
+  "tencent",
   "volcengine",
-  "zhipu",
 ] as const;
+
+/**
+ * Global providers shown first, in this order (mirrors
+ * ``PRIORITY_PRESET_IDS`` in ``octop/infra/agents/providers/presets.py``).
+ * The first entry is the setup wizard's default selection.
+ */
+export const PRIORITY_PRESET_IDS = [
+  "openai",
+  "anthropic",
+  "openrouter",
+  "gemini",
+  "openai-codex",
+  "groq",
+] as const;
+
+function presetPriority(preset: ProviderPreset): number {
+  const idx = PRIORITY_PRESET_IDS.indexOf(
+    preset.id as (typeof PRIORITY_PRESET_IDS)[number],
+  );
+  return idx === -1 ? Number.MAX_SAFE_INTEGER : idx;
+}
 
 function comparePresetGroups(a: PresetGroup, b: PresetGroup): number {
   const ai = PRESET_GROUP_ORDER.indexOf(
@@ -106,7 +127,10 @@ export function groupPresets(presets: ProviderPreset[]): {
   }
 
   grouped.sort(comparePresetGroups);
-  ungrouped.sort((a, b) => a.name.localeCompare(b.name));
+  ungrouped.sort(
+    (a, b) =>
+      presetPriority(a) - presetPriority(b) || a.name.localeCompare(b.name),
+  );
   return { grouped, ungrouped };
 }
 
@@ -125,34 +149,25 @@ export function isLocalPreset(preset: ProviderPreset): boolean {
   return LOCAL_PRESET_IDS.has(preset.id);
 }
 
-/** Presets / groups hidden behind "更多模型提供商" on admin Models (and setup). */
-const OVERSEAS_PRESET_IDS = new Set([
-  "openai",
-  "openai-codex",
-  "anthropic",
-  "gemini",
-  "groq",
-  "openrouter",
-]);
-
-/** Brand groups that belong in the collapsed "more providers" section. */
-const MORE_PROVIDER_GROUPS = new Set(["opencode"]);
-
-export function isOverseasPreset(preset: ProviderPreset): boolean {
-  if (OVERSEAS_PRESET_IDS.has(preset.id)) return true;
-  if (
-    preset.provider_group &&
-    MORE_PROVIDER_GROUPS.has(preset.provider_group)
-  ) {
-    return true;
-  }
-  return preset.id === "opencode" || preset.id.startsWith("opencode-");
-}
+/** Global presets shown by default on admin Models and in the setup wizard. */
+const FEATURED_PRESET_IDS = new Set<string>(PRIORITY_PRESET_IDS);
 
 /**
- * Split cloud presets into default-visible (domestic / already configured)
- * and collapsed presets shown only after "更多模型提供商"
- * (overseas clouds + OpenCode).
+ * True for presets collapsed behind "more providers" on admin Models (and
+ * setup): everything except the global providers above (China-region clouds,
+ * OpenCode, ...). The name predates this fork, where the meaning was flipped
+ * (upstream collapsed the overseas providers instead).
+ */
+export function isOverseasPreset(preset: ProviderPreset): boolean {
+  return !FEATURED_PRESET_IDS.has(preset.id);
+}
+
+export const isMoreSectionPreset = isOverseasPreset;
+
+/**
+ * Split cloud presets into default-visible (global providers / already
+ * configured) and collapsed presets shown only after "more providers"
+ * (China-region clouds, OpenCode, ...).
  */
 export function partitionCloudPresets(
   cloudPresets: ProviderPreset[],

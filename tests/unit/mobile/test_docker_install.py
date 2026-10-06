@@ -16,6 +16,19 @@ from octop.infra.mobile.docker_install import (
 )
 
 
+@pytest.fixture(autouse=True)
+def _cn_mirrors_opted_in(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Upstream mirror-race tests; the fork default (official only) is tested below."""
+    monkeypatch.setenv("OCTOP_USE_CN_MIRRORS", "1")
+
+
+def test_docker_sources_default_to_official_only(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.delenv("OCTOP_USE_CN_MIRRORS", raising=False)
+    assert docker_install.docker_ce_sources() == ("https://download.docker.com",)
+    monkeypatch.setenv("OCTOP_USE_CN_MIRRORS", "1")
+    assert "https://mirrors.aliyun.com/docker-ce" in docker_install.docker_ce_sources()
+
+
 def _with_measure(delays: dict[str, float | None]):
     def deco(fn):
         async def wrapper():

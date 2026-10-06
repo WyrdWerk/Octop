@@ -508,6 +508,82 @@
       "api_key_invalid": "API Key 无效，请检查或在 MCP 平台重新创建",
       "api_key_required": "请填写 API Key",
       "remote_server_error": "远端服务错误 HTTP {status}"
+    },
+    "catalog": {
+      "composio": {
+        "name": "Composio",
+        "description": "通过一个 Composio MCP 服务连接 250+ 应用（Gmail、Slack、GitHub、Linear 等）",
+        "auth_hint": "先在 Composio 控制台创建 MCP 服务，再粘贴 API Key 与服务 ID（或完整 MCP URL）。User ID 默认使用你的 Octop 用户名。",
+        "fields": {
+          "api_key": {
+            "label": "API Key",
+            "placeholder": "ak_...",
+            "help": "以 x-api-key 请求头发送，加密保存。"
+          },
+          "server_id": {
+            "label": "MCP 服务 ID",
+            "placeholder": "例如 3f8e2b1c-...",
+            "help": "在 Composio 控制台的 MCP 服务中获取；填写 MCP URL 时可留空。"
+          },
+          "mcp_url": {
+            "label": "MCP URL（可选，覆盖服务 ID）",
+            "placeholder": "https://backend.composio.dev/v3/mcp/<SERVER_ID>?user_id=<USER_ID>",
+            "help": "填写后优先于服务 ID 使用。"
+          },
+          "user_id": {
+            "label": "User ID",
+            "placeholder": "默认使用你的 Octop 用户名",
+            "help": "智能体将使用该 Composio 用户已连接的账号。"
+          }
+        }
+      },
+      "notion": {
+        "description": "官方 MCP：搜索、读写页面与数据库",
+        "auth_hint": "点击「一键授权」完成 Notion 登录（成功后自动保存），或按官方文档手动获取 Token"
+      },
+      "openalex": {
+        "description": "官方 MCP：检索学术文献、引文、研究实体与统计分析",
+        "auth_hint": "点击「一键授权」登录 OpenAlex（桌面端请用系统浏览器）；查询将使用你自己的 API Key 与每日预算。"
+      },
+      "dify": {
+        "description": "连接 Dify 已发布应用或工作流的 MCP 服务",
+        "auth_hint": "在 Dify 应用的访问点中启用 MCP，然后粘贴完整的 MCP Server URL。",
+        "fields": {
+          "mcp_url": {
+            "label": "MCP Server URL",
+            "help": "完整 URL 含访问标识，将按密钥加密保存"
+          }
+        }
+      },
+      "weknora": {
+        "description": "连接 WeKnora 私有知识库，提供只读检索与文档阅读",
+        "auth_hint": "填写 WeKnora 服务地址；API Key 与 Tenant ID 按部署的鉴权设置填写。",
+        "fields": {
+          "base_url": {
+            "label": "服务地址",
+            "placeholder": "http://127.0.0.1:8080 或 https://weknora.example.com",
+            "help": "未包含 /api/v1 时会自动补齐"
+          },
+          "api_key": {
+            "label": "API Key",
+            "placeholder": "sk-...（无鉴权部署可留空）"
+          },
+          "tenant_id": {
+            "label": "Tenant ID",
+            "help": "平台级 API Key 需要指定工作空间时填写"
+          },
+          "knowledge_base_ids": {
+            "label": "默认知识库 ID",
+            "placeholder": "kb-123, kb-456",
+            "help": "留空时检索当前凭证可见的全部知识库"
+          }
+        }
+      },
+      "qq-mail": {
+        "name": "个人邮箱",
+        "description": "通过 IMAP/SMTP 连接 QQ 邮箱、网易邮箱、Gmail 等",
+        "auth_hint": "选择邮箱服务商，在邮箱设置中开启 IMAP/SMTP 并生成授权码后填入下方"
+      }
     }
   },
   "errors": {

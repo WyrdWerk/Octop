@@ -15,11 +15,15 @@ OCTOP_HOME="${OCTOP_HOME:-$HOME/.octop}"
 OCTOP_VENV="$OCTOP_HOME/venv"
 OCTOP_BIN="$OCTOP_HOME/bin"
 PYTHON_VERSION="3.12"
-OCTOP_REPO="${OCTOP_REPO:-https://github.com/TencentCloud/Octop.git}"
-_OCTOP_REPO_BASE="${OCTOP_REPO%/*}"
-HARNESS_AGENT_REPO="${HARNESS_AGENT_REPO:-${_OCTOP_REPO_BASE}/octop-harness.git}"
-HARNESS_GATEWAY_REPO="${HARNESS_GATEWAY_REPO:-${_OCTOP_REPO_BASE}/octop-gateway.git}"
-HARNESS_BROWSER_REPO="${HARNESS_BROWSER_REPO:-${_OCTOP_REPO_BASE}/octop-browser.git}"
+OCTOP_REPO="${OCTOP_REPO:-https://github.com/WyrdWerk/Octop.git}"
+# Runtime packages are not forked: default to the upstream TencentCloud repos.
+_UPSTREAM_REPO_BASE="https://github.com/TencentCloud"
+HARNESS_AGENT_REPO="${HARNESS_AGENT_REPO:-${_UPSTREAM_REPO_BASE}/octop-harness.git}"
+HARNESS_GATEWAY_REPO="${HARNESS_GATEWAY_REPO:-${_UPSTREAM_REPO_BASE}/octop-gateway.git}"
+HARNESS_BROWSER_REPO="${HARNESS_BROWSER_REPO:-${_UPSTREAM_REPO_BASE}/octop-browser.git}"
+# Mainland-China mirrors (PyPI / Playwright) are opt-in: --cn-mirrors or
+# OCTOP_USE_CN_MIRRORS=1. Default is the official upstream indexes only.
+USE_CN_MIRRORS="${OCTOP_USE_CN_MIRRORS:-0}"
 
 if [ -n "${BASH_SOURCE[0]:-}" ]; then
     _SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -54,6 +58,13 @@ warn()  { printf "${YELLOW}[octop]${RESET} %s\n" "$*"; }
 error() { printf "${RED}[octop]${RESET} %s\n" "$*" >&2; }
 die()   { error "$@"; exit 1; }
 
+_cn_mirrors_enabled() {
+    case "${USE_CN_MIRRORS:-0}" in
+        1|true|TRUE|yes|on) return 0 ;;
+        *) return 1 ;;
+    esac
+}
+
 # ── 解析参数 ──────────────────────────────────────────────────────────────────
 while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -74,6 +85,8 @@ while [[ $# -gt 0 ]]; do
             EXTRAS="$2"; shift 2 ;;
         --mirror)
             PYPI_MIRROR="$2"; shift 2 ;;
+        --cn-mirrors)
+            USE_CN_MIRRORS=1; shift ;;
         -h|--help)
             cat <<EOF
 Octop installer (macOS / Linux)
@@ -86,6 +99,7 @@ Options:
   --from-pypi           Install from PyPI (default)
   --extras <EXTRAS>     Extra optional components (e.g. desktop, browser)
   --mirror <URL>        Use a specific PyPI mirror (e.g. https://mirrors.cloud.tencent.com/pypi/simple)
+  --cn-mirrors          Also try mainland-China mirrors (Tencent/Aliyun PyPI, npmmirror)
   -h, --help            Show this help
 
 Note: Playwright Chromium is not downloaded by default. Pass
@@ -96,11 +110,13 @@ Note: Playwright Chromium is not downloaded by default. Pass
 Environment variables:
   OCTOP_HOME              Install directory (default: ~/.octop)
   OCTOP_PYPI_MIRROR       PyPI mirror URL (same as --mirror)
+  OCTOP_USE_CN_MIRRORS    1 = also try mainland-China mirrors (same as --cn-mirrors)
   OCTOP_REPO              Git URL to clone (used by --from-source with no local dir)
-  HARNESS_AGENT_REPO      octop-harness repo (derived from OCTOP_REPO by default)
-  HARNESS_GATEWAY_REPO    octop-gateway repo (derived from OCTOP_REPO by default)
+  HARNESS_AGENT_REPO      octop-harness repo (default: github.com/TencentCloud/octop-harness)
+  HARNESS_GATEWAY_REPO    octop-gateway repo (default: github.com/TencentCloud/octop-gateway)
   HARNESS_BROWSER_REPO    octop-browser repo (used for source installs)
-  PLAYWRIGHT_DOWNLOAD_HOST  Playwright download mirror (optional; auto: npmmirror -> official)
+  PLAYWRIGHT_DOWNLOAD_HOST  Playwright download mirror (optional; official CDN by default,
+                            npmmirror is tried first with --cn-mirrors)
   PLAYWRIGHT_INSTALL_TIMEOUT  Per-mirror download timeout in seconds (default 600)
 
 Details:
@@ -139,11 +155,16 @@ _install_uv_via_pip() {
     local install_dir="$HOME/.local/bin"
     mkdir -p "$install_dir"
 
-    # 不使用清华/中科大镜像：部分环境拉 wheel 会 302 到 TUNA 并返回 403
-    local mirrors=(
-        "https://mirrors.cloud.tencent.com/pypi/simple"
-        "https://mirrors.aliyun.com/pypi/simple"
-    )
+    # Official PyPI by default; CN mirrors (Tencent/Aliyun) first only when opted in.
+    # TUNA/USTC are not used: some networks 302 wheels to TUNA and get a 403.
+    local mirrors=()
+    if _cn_mirrors_enabled; then
+        mirrors+=(
+            "https://mirrors.cloud.tencent.com/pypi/simple"
+            "https://mirrors.aliyun.com/pypi/simple"
+        )
+    fi
+    mirrors+=("https://pypi.org/simple")
     for mirror in "${mirrors[@]}"; do
         local host
         host="$(echo "$mirror" | awk -F/ '{print $3}')"
@@ -221,7 +242,7 @@ ensure_uv() {
     if _install_uv_via_astral; then
         command -v uv &>/dev/null && { info "uv installed successfully (via astral.sh)"; return; }
     fi
-    die "Failed to install uv. Run manually: pip3 install uv -i https://mirrors.cloud.tencent.com/pypi/simple"
+    die "Failed to install uv. Run manually: pip3 install uv  (or see https://docs.astral.sh/uv/)"
 }
 
 ensure_uv
@@ -229,12 +250,19 @@ ensure_uv
 # ── 选择最快的 PyPI 镜像 ──────────────────────────────────────────────────────
 # 仅保留实测可用的国内源。清华 TUNA / 中科大 USTC 在部分网络下拉 wheel
 # 会 302 到 TUNA 并 403，导致 uv pip install 失败，故不再作为候选。
-_PYPI_MIRRORS=(
-    "https://mirrors.cloud.tencent.com/pypi/simple"
-    "https://mirrors.aliyun.com/pypi/simple"
-)
+_PYPI_MIRRORS=()
+if _cn_mirrors_enabled; then
+    _PYPI_MIRRORS=(
+        "https://mirrors.cloud.tencent.com/pypi/simple"
+        "https://mirrors.aliyun.com/pypi/simple"
+    )
+fi
 _FASTEST_MIRROR=""
 _select_fastest_pypi_mirror() {
+    if [ "${#_PYPI_MIRRORS[@]}" -eq 0 ]; then
+        _FASTEST_MIRROR=""
+        return
+    fi
     local best_mirror="${_PYPI_MIRRORS[0]}"
     local best_time=9999
     local found=0
@@ -282,7 +310,7 @@ _uv_pip_install_with_mirror_fallback() {
     if [ -n "${_EXTRA_MIRROR:-}" ]; then
         candidates+=("$_EXTRA_MIRROR")
     fi
-    for m in "${_PYPI_MIRRORS[@]}"; do
+    for m in ${_PYPI_MIRRORS[@]+"${_PYPI_MIRRORS[@]}"}; do
         if [ -n "$m" ] && [ "$m" != "${_EXTRA_MIRROR:-}" ]; then
             candidates+=("$m")
         fi
@@ -839,7 +867,9 @@ _install_playwright_browsers() {
     if [ -n "${PLAYWRIGHT_DOWNLOAD_HOST:-}" ]; then
         _pw_hosts+=("$PLAYWRIGHT_DOWNLOAD_HOST")
     fi
-    _pw_hosts+=("https://cdn.npmmirror.com/binaries/playwright")
+    if _cn_mirrors_enabled; then
+        _pw_hosts+=("https://cdn.npmmirror.com/binaries/playwright")
+    fi
     _pw_hosts+=("")  # 官方：清空 PLAYWRIGHT_DOWNLOAD_HOST
 
     local _seen="|"
@@ -865,8 +895,7 @@ _install_playwright_browsers() {
     done
 
     warn "⚠ Playwright Chromium install failed; you can run this later:"
-    warn "  PLAYWRIGHT_DOWNLOAD_HOST=https://cdn.npmmirror.com/binaries/playwright \\"
-    warn "    $OCTOP_VENV/bin/python -m playwright install chromium"
+    warn "  $OCTOP_VENV/bin/python -m playwright install chromium"
     return 1
 }
 

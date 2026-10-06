@@ -8,7 +8,7 @@ import tempfile
 from pathlib import Path
 from typing import Any
 
-from fastapi import APIRouter, Depends, File, Form, UploadFile
+from fastapi import APIRouter, Depends, File, Form, Request, UploadFile
 from fastapi.responses import FileResponse, Response
 from pydantic import BaseModel, Field
 
@@ -22,6 +22,7 @@ from octop.infra.agents.plugins.plugin_tool_defaults import (
 )
 from octop.infra.errors import ErrorCode, OctopError
 from octop.infra.server import OctopServer
+from octop.infra.utils.locale import resolve_request_locale
 
 router = APIRouter(prefix="/plugins", tags=["plugins"])
 
@@ -98,10 +99,11 @@ def _plugin_manager(server: OctopServer) -> PluginManager:
 
 @router.get("", summary="List installed plugins")
 async def list_plugins(
+    request: Request,
     server: OctopServer = Depends(get_server),
     _user: Any = Depends(current_user),
 ) -> list[dict[str, Any]]:
-    return _plugin_manager(server).list_installed()
+    return _plugin_manager(server).list_installed(locale=resolve_request_locale(request))
 
 
 @router.post("/reload", summary="Reload plugins from disk (admin)")
@@ -203,11 +205,12 @@ async def upload_plugin(
 
 @router.get("/market", summary="List marketplace catalog plugins")
 async def list_market_plugins(
+    request: Request,
     server: OctopServer = Depends(get_server),
     _user: Any = Depends(current_user),
 ) -> list[dict[str, Any]]:
     """Return the in-tree marketplace catalog (future: remote index API)."""
-    return _plugin_manager(server).list_market()
+    return _plugin_manager(server).list_market(locale=resolve_request_locale(request))
 
 
 @router.post(

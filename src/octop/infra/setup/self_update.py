@@ -32,12 +32,25 @@ _PROBE_TIMEOUT_S = 8
 _INSTALL_TIMEOUT_S = 90
 _FPK_INSTALL_TIMEOUT_S = 900
 
-_MIRRORS = [
+# Mainland-China PyPI mirrors. Only probed when explicitly opted in via
+# OCTOP_USE_CN_MIRRORS=1; otherwise upgrades talk to pypi.org only.
+_CN_MIRRORS = [
     "https://mirrors.cloud.tencent.com/pypi/simple",
     "https://mirrors.aliyun.com/pypi/simple",
     "https://pypi.tuna.tsinghua.edu.cn/simple",
     "https://mirrors.ustc.edu.cn/pypi/simple",
 ]
+_PYPI_MIRRORS_ENV = "OCTOP_PYPI_MIRRORS"
+_USE_CN_MIRRORS_ENV = "OCTOP_USE_CN_MIRRORS"
+_DISABLE_SELF_UPDATE_ENV = "OCTOP_DISABLE_SELF_UPDATE"
+_TRUTHY = frozenset({"1", "true", "yes", "on"})
+_FALSY = frozenset({"0", "false", "no", "off"})
+
+SELF_UPDATE_MANAGED_MESSAGE = (
+    "Updates for this Octop build are managed by its deployer. In-place upgrades "
+    "from PyPI are disabled because they would replace this build with the upstream "
+    "package. Set OCTOP_DISABLE_SELF_UPDATE=0 to re-enable them."
+)
 
 _COMMON_UV_PATHS = [
     os.path.expanduser("~/.local/bin/uv"),
@@ -65,6 +78,34 @@ class IndexProbe:
     elapsed: float
     status: str  # has_version | missing_version | unreachable
     detail: str = ""
+
+
+def self_update_disabled() -> bool:
+    """True unless ``OCTOP_DISABLE_SELF_UPDATE`` is explicitly falsy.
+
+    This fork is not the PyPI ``octop`` package: a self-upgrade would install
+    upstream over it, so check/upgrade is off by default.
+    """
+    raw = (os.environ.get(_DISABLE_SELF_UPDATE_ENV) or "").strip().lower()
+    return raw not in _FALSY
+
+
+def pypi_mirrors() -> list[str]:
+    """Extra PyPI simple indexes to try before pypi.org (empty by default).
+
+    ``OCTOP_PYPI_MIRRORS`` (comma separated) wins; ``OCTOP_USE_CN_MIRRORS=1``
+    selects the bundled mainland-China mirror list.
+    """
+    explicit = [
+        part.strip().rstrip("/")
+        for part in (os.environ.get(_PYPI_MIRRORS_ENV) or "").split(",")
+        if part.strip()
+    ]
+    if explicit:
+        return [url for url in explicit if url != _PYPI_SIMPLE]
+    if (os.environ.get(_USE_CN_MIRRORS_ENV) or "").strip().lower() in _TRUTHY:
+        return list(_CN_MIRRORS)
+    return []
 
 
 def green_packages_dir() -> Path | None:
@@ -644,7 +685,7 @@ def rank_install_indexes(
     latency. ``pypi.org`` is always appended as a final fallback even when its
     probe fails (HTML parse misses / transient errors).
     """
-    indexes = [*_MIRRORS, _PYPI_SIMPLE]
+    indexes = [*pypi_mirrors(), _PYPI_SIMPLE]
     probes: list[IndexProbe] = []
     with ThreadPoolExecutor(max_workers=len(indexes)) as pool:
         futures = [
@@ -739,7 +780,10 @@ def _verify_fpk_upgrade(
     if actual_ver and is_newer(actual_ver, local_ver):
         return UpgradeResult(
             success=True,
-            message=f"已升级到 {actual_ver}，请重启服务生效（应用中心托管的服务重启后加载新版）。",
+            message=(
+                f"Upgraded to {actual_ver}. Restart the service to apply it "
+                "(services managed by the app center load the new version on restart)."
+            ),
             installed_version=actual_ver,
             mirror_errors=mirror_errors,
         )
@@ -747,8 +791,9 @@ def _verify_fpk_upgrade(
         return UpgradeResult(
             success=False,
             error=(
-                f"安装完成但版本仍为 {actual_ver}；"
-                "请确认新版已发布，或改用飞牛应用中心安装新版 FPK。"
+                f"Install finished but the version is still {actual_ver}. "
+                "Make sure the new release is published, or install the new FPK "
+                "from the fnOS app center instead."
             ),
             installed_version=actual_ver,
             mirror_errors=mirror_errors,
@@ -768,25 +813,29 @@ def _run_fpk_upgrade(
     allow_prerelease: bool = False,
     version: str | None = None,
 ) -> UpgradeResult:
-    """FnOS FPK 部署下的在线升级：把新版安装到 launcher 实际加载的打包目录。
+    """Online upgrade for fnOS FPK deployments.
 
-    launcher 通过 PYTHONPATH 从应用中心托管的打包 site-packages 加载 octop，
-    在线安装到系统 Python 永远不会被加载（重启后仍是旧版）。本函数把新版
-    安装到该打包目录本身，重启服务后即加载新版，升级真正生效。
+    The launcher loads octop from the app-center managed site-packages via
+    PYTHONPATH, so installing into the system Python would never be picked up
+    (the old version comes back after restart). This installs the new release
+    into that packaged directory itself; it takes effect after a service restart.
 
-    与普通部署不同，FPK 首次在线升级需要从零解析并下载完整依赖树
-    （octop 依赖 octop-harness 等大包），故安装超时显著放宽；先并行探测
-    simple index，缺版本/不可达的镜像直接跳过，最后以 pypi.org 兜底。
+    Unlike regular deployments, the first FPK upgrade resolves and downloads the
+    full dependency tree (octop pulls large packages such as octop-harness), so
+    the install timeout is much longer. Indexes are probed in parallel first;
+    mirrors missing the version or unreachable are skipped, with pypi.org as the
+    final fallback.
     """
     if not os.path.isdir(site_packages):
         return UpgradeResult(
             success=False,
-            error=f"FPK site-packages 目录不存在：{site_packages}",
+            error=f"FPK site-packages directory does not exist: {site_packages}",
         )
     local_ver = get_local_version()
     ordered, mirror_errors = rank_install_indexes(version)
     python_exe = sys.executable
-    installer = detect_installer()  # uv 优先：pip 对 octop-harness[all] 依赖树解析会卡死
+    # Prefer uv: pip's resolver can hang on the octop-harness[all] dependency tree.
+    installer = detect_installer()
 
     def _build_cmd(index_url: str) -> list[str]:
         requirement = package_requirement(version)
@@ -837,7 +886,7 @@ def _run_fpk_upgrade(
         res = _verify_fpk_upgrade(local_ver, site_packages, python_exe, mirror_errors)
         if res.success:
             return res
-        # 镜像装到了同版本/旧版（同步滞后）：继续尝试下一个镜像
+        # Mirror installed the same/older version (sync lag): try the next one.
         mirror_errors.append(f"{label}: {res.error or 'version unchanged'}")
 
     return _all_mirrors_failed(mirror_errors)
@@ -849,10 +898,14 @@ def run_upgrade(
     allow_prerelease: bool = False,
     version: str | None = None,
 ) -> UpgradeResult:
-    # [FPK] FnOS FPK 部署：launcher 通过 PYTHONPATH 从应用中心托管的打包
-    # site-packages 加载 octop，在线安装到系统 Python 永远不会被加载（重启
-    # 无效）。launcher 导出 OCTOP_FPK_SITE_PACKAGES 指向该打包目录，升级即
-    # 安装到此目录并提示重启服务生效——升级真正可用，而非禁止升级。
+    if self_update_disabled():
+        return UpgradeResult(success=False, error=SELF_UPDATE_MANAGED_MESSAGE)
+
+    # [FPK] fnOS FPK deployments: the launcher loads octop from the app-center
+    # managed site-packages via PYTHONPATH, so installing into the system Python
+    # would never be loaded (a restart would not help). The launcher exports
+    # OCTOP_FPK_SITE_PACKAGES pointing at that directory; the upgrade installs
+    # there and asks for a service restart, so upgrades really work there.
     _fpk_site = os.environ.get("OCTOP_FPK_SITE_PACKAGES", "").strip()
     if _fpk_site:
         return _run_fpk_upgrade(

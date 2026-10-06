@@ -23,8 +23,10 @@ import {
   normalizeChannelFieldValue,
   normalizeQqGroupContextConfig,
   partitionChannelKeys,
+  filterAllowedChannelKeys,
   type ChannelKey,
 } from "./components";
+import { useAllowedChannelKinds } from "./useAllowedChannelKinds";
 import type { ChannelRow } from "./useChannels";
 import type { ChannelFormValues } from "./components/ChannelDrawer";
 import styles from "./index.module.less";
@@ -138,13 +140,24 @@ export default function ChannelsPanel({ agentId }: ChannelsPanelProps) {
     return map;
   }, [channels]);
 
+  const allowedChannelKinds = useAllowedChannelKinds();
+  const offeredChannelKeys = useMemo(
+    () =>
+      filterAllowedChannelKeys(
+        CHANNEL_KEYS,
+        allowedChannelKinds,
+        new Set(channelByKind.keys()),
+      ),
+    [allowedChannelKinds, channelByKind],
+  );
+
   const { featuredChannelKeys, moreChannelKeys } = useMemo(() => {
     const { featured, more } = partitionChannelKeys(
-      CHANNEL_KEYS,
+      offeredChannelKeys,
       new Set(channelByKind.keys()),
     );
     return { featuredChannelKeys: featured, moreChannelKeys: more };
-  }, [channelByKind]);
+  }, [channelByKind, offeredChannelKeys]);
 
   const visibleChannelKeys = showMoreChannels
     ? [...featuredChannelKeys, ...moreChannelKeys]
@@ -418,7 +431,7 @@ export default function ChannelsPanel({ agentId }: ChannelsPanelProps) {
       <div className={styles.channelsToolbar}>
         <span className={styles.channelsStats}>
           {t("channels.statsSummary", {
-            supported: CHANNEL_KEYS.length,
+            supported: offeredChannelKeys.length,
             configured: channelByKind.size,
           })}
         </span>

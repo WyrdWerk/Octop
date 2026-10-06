@@ -17,6 +17,14 @@ from octop.infra.setup.self_update import UpgradeResult
 
 
 @pytest.fixture(autouse=True)
+def _self_update_enabled(monkeypatch: pytest.MonkeyPatch) -> None:
+    """These tests cover the upstream upgrade flow; the fork disables it by default."""
+    monkeypatch.setenv("OCTOP_DISABLE_SELF_UPDATE", "0")
+    monkeypatch.setenv("OCTOP_USE_CN_MIRRORS", "1")
+    monkeypatch.delenv("OCTOP_PYPI_MIRRORS", raising=False)
+
+
+@pytest.fixture(autouse=True)
 def _clear_update_status_cache() -> None:
     update_store.clear_cached_status()
     yield

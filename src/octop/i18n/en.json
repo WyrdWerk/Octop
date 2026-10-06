@@ -508,6 +508,82 @@
       "api_key_invalid": "The API Key is invalid; check it or recreate it on the MCP platform",
       "api_key_required": "Enter the API Key",
       "remote_server_error": "Remote service error HTTP {status}"
+    },
+    "catalog": {
+      "composio": {
+        "name": "Composio",
+        "description": "Connect 250+ apps (Gmail, Slack, GitHub, Linear, ...) through one Composio MCP server",
+        "auth_hint": "Create an MCP server in the Composio dashboard, then paste your API key and the server ID (or the full MCP URL). User ID defaults to your Octop username.",
+        "fields": {
+          "api_key": {
+            "label": "API Key",
+            "placeholder": "ak_...",
+            "help": "Sent as the x-api-key header; stored encrypted."
+          },
+          "server_id": {
+            "label": "MCP Server ID",
+            "placeholder": "e.g. 3f8e2b1c-...",
+            "help": "From the Composio dashboard (MCP servers). Not needed when an MCP URL is set."
+          },
+          "mcp_url": {
+            "label": "MCP URL (optional override)",
+            "placeholder": "https://backend.composio.dev/v3/mcp/<SERVER_ID>?user_id=<USER_ID>",
+            "help": "Takes precedence over the server ID."
+          },
+          "user_id": {
+            "label": "User ID",
+            "placeholder": "defaults to your Octop username",
+            "help": "Composio user whose connected accounts the agent uses."
+          }
+        }
+      },
+      "notion": {
+        "description": "Official MCP: search, read and write pages and databases",
+        "auth_hint": "Click \"Authorize\" to sign in to Notion (saved automatically), or get a token manually following the official docs."
+      },
+      "openalex": {
+        "description": "Official MCP: search scholarly works, citations, research entities and statistics",
+        "auth_hint": "Click \"Authorize\" to sign in to OpenAlex (use the system browser on desktop). Queries use your own API key and daily budget."
+      },
+      "dify": {
+        "description": "Connect to the MCP server of a published Dify app or workflow",
+        "auth_hint": "Enable MCP in the Dify app's access point, then paste the full MCP Server URL.",
+        "fields": {
+          "mcp_url": {
+            "label": "MCP Server URL",
+            "help": "The full URL includes an access code and is stored encrypted."
+          }
+        }
+      },
+      "weknora": {
+        "description": "Connect a WeKnora private knowledge base for read-only search and document reading",
+        "auth_hint": "Enter the WeKnora server URL; fill in API Key and Tenant ID according to your deployment's auth settings.",
+        "fields": {
+          "base_url": {
+            "label": "Server URL",
+            "placeholder": "http://127.0.0.1:8080 or https://weknora.example.com",
+            "help": "/api/v1 is appended automatically when missing"
+          },
+          "api_key": {
+            "label": "API Key",
+            "placeholder": "sk-... (leave empty for deployments without auth)"
+          },
+          "tenant_id": {
+            "label": "Tenant ID",
+            "help": "Required when a platform-level API key must target a specific workspace"
+          },
+          "knowledge_base_ids": {
+            "label": "Default knowledge base IDs",
+            "placeholder": "kb-123, kb-456",
+            "help": "Leave empty to search every knowledge base visible to this credential"
+          }
+        }
+      },
+      "qq-mail": {
+        "name": "Personal Email",
+        "description": "Connect Gmail, QQ Mail, NetEase or any IMAP/SMTP mailbox",
+        "auth_hint": "Choose your mail provider, enable IMAP/SMTP in its settings, generate an app password and enter it below."
+      }
     }
   },
   "errors": {

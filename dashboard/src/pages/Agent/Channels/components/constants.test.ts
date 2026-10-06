@@ -2,24 +2,22 @@ import { describe, expect, it } from "vitest";
 
 import {
   applyQqChannelSaveConfig,
-  DEFAULT_CHANNEL_DISPLAY_CONFIG,
   DEFAULT_QQ_GROUP_CONTEXT_CONFIG,
   normalizeQqGroupContextConfig,
   partitionChannelKeys,
+  filterAllowedChannelKeys,
+  DEFAULT_ALLOWED_CHANNEL_KEYS,
   CHANNEL_KEYS,
   CHANNEL_FIELDS,
   normalizeChannelFieldValue,
 } from "./constants";
 
 describe("Discord configuration", () => {
-  it("exposes Discord in more channels and keeps configured bots visible", () => {
+  it("features Discord by default and keeps its credential fields", () => {
     expect(CHANNEL_KEYS).toContain("discord");
-    expect(partitionChannelKeys(["discord"], new Set()).more).toEqual([
+    expect(partitionChannelKeys(["discord"], new Set()).featured).toEqual([
       "discord",
     ]);
-    expect(
-      partitionChannelKeys(["discord"], new Set(["discord"])).featured,
-    ).toEqual(["discord"]);
     expect(
       CHANNEL_FIELDS.discord?.find((f) => f.name === "bot_token"),
     ).toMatchObject({ required: true, type: "password" });
@@ -46,22 +44,34 @@ describe("Discord configuration", () => {
 });
 
 describe("partitionChannelKeys", () => {
-  it("hides telegram until expanded unless already configured", () => {
+  it("collapses China-only kinds until expanded unless already configured", () => {
     expect(
       partitionChannelKeys(["weixin", "telegram", "mqtt"], new Set()),
     ).toEqual({
-      featured: ["weixin", "mqtt"],
-      more: ["telegram"],
+      featured: ["telegram", "mqtt"],
+      more: ["weixin"],
     });
     expect(
-      partitionChannelKeys(
-        ["weixin", "telegram", "mqtt"],
-        new Set(["telegram"]),
-      ),
+      partitionChannelKeys(["weixin", "telegram", "mqtt"], new Set(["weixin"])),
     ).toEqual({
       featured: ["weixin", "telegram", "mqtt"],
       more: [],
     });
+  });
+});
+
+describe("filterAllowedChannelKeys", () => {
+  it("defaults to the global channel set", () => {
+    expect(filterAllowedChannelKeys(CHANNEL_KEYS, undefined)).toEqual([
+      ...DEFAULT_ALLOWED_CHANNEL_KEYS,
+    ]);
+  });
+
+  it("honours the server allowlist and keeps configured kinds", () => {
+    expect(
+      filterAllowedChannelKeys(CHANNEL_KEYS, ["telegram"], new Set(["qq"])),
+    ).toEqual(["telegram", "qq"]);
+    expect(filterAllowedChannelKeys(CHANNEL_KEYS, null)).toEqual(CHANNEL_KEYS);
   });
 });
 

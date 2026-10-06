@@ -5,7 +5,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Literal
 
-from octop.i18n import tr
+from octop.i18n import lookup, tr
+from octop.infra.utils.region_defaults import connector_allowlist, is_allowed
 
 AuthKind = Literal[
     "personal_token",
@@ -110,6 +111,58 @@ def get_mcp_oauth_remote(kind: str) -> ConnectorCatalogEntry | None:
 
 
 _CATALOG: tuple[ConnectorCatalogEntry, ...] = (
+    ConnectorCatalogEntry(
+        kind="composio",
+        name="Composio",
+        description="Connect 250+ apps (Gmail, Slack, GitHub, Linear, ...) through one Composio MCP server",
+        auth_kind="custom_fields",
+        doc_url="https://docs.composio.dev/docs/mcp-quickstart",
+        icon="composio",
+        color="#111111",
+        phase="available",
+        mcp_mode="remote",
+        category="productivity",
+        quick_auth_url="https://platform.composio.dev/",
+        guide_url="https://docs.composio.dev/docs/mcp-quickstart",
+        manual_url="https://platform.composio.dev/",
+        auth_hint=(
+            "Create an MCP server in the Composio dashboard, then paste your API key and the "
+            "server ID (or the full MCP URL). User ID defaults to your Octop username."
+        ),
+        credential_fields=(
+            ConnectorCredentialField(
+                key="api_key",
+                label="API Key",
+                field_type="password",
+                placeholder="ak_...",
+                help="Sent as the x-api-key header; stored encrypted.",
+                secret=True,
+            ),
+            ConnectorCredentialField(
+                key="server_id",
+                label="MCP Server ID",
+                required=False,
+                placeholder="e.g. 3f8e2b1c-...",
+                help="From the Composio dashboard (MCP servers). Not needed when an MCP URL is set.",
+            ),
+            ConnectorCredentialField(
+                key="mcp_url",
+                label="MCP URL (optional override)",
+                field_type="url",
+                required=False,
+                placeholder="https://backend.composio.dev/v3/mcp/<SERVER_ID>?user_id=<USER_ID>",
+                help="Takes precedence over the server ID.",
+            ),
+            ConnectorCredentialField(
+                key="user_id",
+                label="User ID",
+                required=False,
+                placeholder="defaults to your Octop username",
+                help="Composio user whose connected accounts the agent uses.",
+            ),
+        ),
+        remote_transport="streamable_http",
+    ),
     ConnectorCatalogEntry(
         kind="tencent-docs",
         name="腾讯文档",
@@ -602,8 +655,18 @@ _CATALOG: tuple[ConnectorCatalogEntry, ...] = (
 )
 
 
-def list_catalog() -> list[ConnectorCatalogEntry]:
-    return list(_CATALOG)
+def list_catalog(*, include_hidden: bool = False) -> list[ConnectorCatalogEntry]:
+    """Catalog entries shown to users.
+
+    Entries outside the deployment allowlist (``OCTOP_CONNECTOR_ALLOWLIST``,
+    see :mod:`octop.infra.utils.region_defaults`) are hidden from listings but
+    stay resolvable through :func:`get_catalog_entry`, so instances created
+    earlier keep working.
+    """
+    if include_hidden:
+        return list(_CATALOG)
+    allowlist = connector_allowlist()
+    return [entry for entry in _CATALOG if is_allowed(entry.kind, allowlist)]
 
 
 def get_catalog_entry(kind: str) -> ConnectorCatalogEntry | None:
@@ -611,6 +674,16 @@ def get_catalog_entry(kind: str) -> ConnectorCatalogEntry | None:
         if entry.kind == kind:
             return entry
     return None
+
+
+def _localized(kind: str, field: str, locale: str, fallback: str | None) -> str | None:
+    """Locale override from ``connector.catalog.<kind>.<field>`` (i18n bundles).
+
+    Catalog literals stay as upstream wrote them; the i18n bundles carry the
+    English / Chinese display text so the dashboard follows the UI locale.
+    """
+    text = lookup(f"connector.catalog.{kind}.{field}", locale)
+    return text if text is not None else fallback
 
 
 def catalog_entry_to_dict(
@@ -621,10 +694,10 @@ def catalog_entry_to_dict(
     oauth_mode = oauth_mode_for_kind(entry.kind)
     return {
         "kind": entry.kind,
-        "name": entry.name,
+        "name": _localized(entry.kind, "name", locale, entry.name),
         "description": tr("connector.agently.description", locale)
         if entry.kind == "agently-cli"
-        else entry.description,
+        else _localized(entry.kind, "description", locale, entry.description),
         "auth_kind": entry.auth_kind,
         "doc_url": entry.doc_url,
         "icon": entry.icon,
@@ -638,17 +711,19 @@ def catalog_entry_to_dict(
         "manual_url": entry.manual_url or entry.guide_url or entry.doc_url,
         "auth_hint": tr("connector.agently.auth_hint", locale)
         if entry.kind == "agently-cli"
-        else entry.auth_hint,
+        else _localized(entry.kind, "auth_hint", locale, entry.auth_hint),
         "oauth_mode": oauth_mode,
         "oauth_ready": oauth_ready,
         "credential_fields": [
             {
                 "key": field.key,
-                "label": field.label,
+                "label": _localized(entry.kind, f"fields.{field.key}.label", locale, field.label),
                 "field_type": field.field_type,
                 "required": field.required,
-                "placeholder": field.placeholder,
-                "help": field.help,
+                "placeholder": _localized(
+                    entry.kind, f"fields.{field.key}.placeholder", locale, field.placeholder
+                ),
+                "help": _localized(entry.kind, f"fields.{field.key}.help", locale, field.help),
                 "secret": field.secret,
             }
             for field in entry.credential_fields

@@ -1,5 +1,6 @@
 import tencentArdot from "./tencent-ardot.png";
 import baiduMap from "./baidu-map.png";
+import composio from "./composio.svg";
 import ctripWendao from "./ctrip-wendao.png";
 import didi from "./didi.svg";
 import dida365 from "./dida365.png";
@@ -47,6 +48,7 @@ export const CONNECTOR_LOGOS: Record<string, string> = {
   qcc,
   dida365: dida365,
   dify,
+  composio,
   "tencent-news": tencentNews,
   "wechat-reading": wechatReading,
   "youdao-note": youdaoNote,

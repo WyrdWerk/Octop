@@ -3415,6 +3415,12 @@ class AgentManager:
         )
         if "language" in _HARNESS_AGENT_CONFIG_FIELDS:
             harness_cfg.language = self._harness_language(row, cfg)
+        if "web_search_tools" in _HARNESS_AGENT_CONFIG_FIELDS:
+            from octop.infra.agents.settings.web_search import resolve_web_search_policy
+
+            # Explicit provider list: never the harness "auto" default, which
+            # always mounts the third-party searchfree.site tool.
+            harness_cfg.web_search_tools = resolve_web_search_policy(cfg)
         if "tools_disabled" in _HARNESS_AGENT_CONFIG_FIELDS:
             from octop.infra.agents.settings.tool_catalog import effective_tools_disabled
             from octop.infra.agents.teams import host_tools_disabled

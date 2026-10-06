@@ -36,20 +36,57 @@ export type ChannelKey =
  * ``dashboard`` / ``agentchat`` are intentionally omitted until implemented.
  */
 export const CHANNEL_KEYS: ChannelKey[] = [
+  "telegram",
+  "discord",
+  "mqtt",
   "weixin",
   "qq",
   "wecom",
   "feishu",
   "yuanbao",
   "dingtalk",
+  "xiaoyi",
+];
+
+/**
+ * Kinds offered when the server does not report ``channel_kinds`` (older
+ * backends, or while capabilities are loading). Mirrors the backend default
+ * of ``OCTOP_CHANNEL_ALLOWLIST`` (``octop/infra/utils/region_defaults.py``).
+ */
+export const DEFAULT_ALLOWED_CHANNEL_KEYS: readonly ChannelKey[] = [
   "telegram",
   "discord",
-  "xiaoyi",
   "mqtt",
 ];
 
-/** Overseas / less-common kinds hidden behind "更多通道" until expanded. */
-const COLLAPSED_CHANNEL_KEYS = new Set<ChannelKey>(["telegram", "discord"]);
+/**
+ * Restrict the catalogue to the server allowlist. ``allowed === null`` means
+ * every kind (``OCTOP_CHANNEL_ALLOWLIST=*``). Already-configured kinds stay
+ * visible so operators can still manage or delete them.
+ */
+export function filterAllowedChannelKeys(
+  keys: readonly ChannelKey[],
+  allowed: readonly string[] | null | undefined,
+  configuredKinds: ReadonlySet<ChannelKey> = new Set(),
+): ChannelKey[] {
+  if (allowed === null) return [...keys];
+  const allow = new Set<string>(allowed ?? DEFAULT_ALLOWED_CHANNEL_KEYS);
+  return keys.filter((key) => allow.has(key) || configuredKinds.has(key));
+}
+
+/**
+ * China-only kinds collapsed behind "more channels" when an operator enables
+ * them via ``OCTOP_CHANNEL_ALLOWLIST``.
+ */
+const COLLAPSED_CHANNEL_KEYS = new Set<ChannelKey>([
+  "weixin",
+  "qq",
+  "wecom",
+  "feishu",
+  "yuanbao",
+  "dingtalk",
+  "xiaoyi",
+]);
 
 export function isCollapsedChannelKey(key: ChannelKey): boolean {
   return COLLAPSED_CHANNEL_KEYS.has(key);

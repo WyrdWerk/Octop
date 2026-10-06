@@ -53,12 +53,12 @@ def _opensearch_title(client: httpx.Client, lang: str, query: str) -> str | None
     return None
 
 
-async def wiki_summary(query: str, lang: str = "zh") -> str:
+async def wiki_summary(query: str, lang: str = "en") -> str:
     """Fetch Wikipedia summary; opensearch if direct title misses."""
     q = (query or "").strip()
     if not q:
         return _payload({"error": "empty"}, "请提供词条名或关键词。")
-    language = (lang or "zh").strip().lower() or "zh"
+    language = (lang or "en").strip().lower() or "en"
     headers = {"User-Agent": _UA}
     try:
         with httpx.Client(timeout=20.0, headers=headers, follow_redirects=True) as client:
@@ -79,5 +79,8 @@ def setup(ctx: PluginContext) -> None:
     ctx.tool(
         "wiki_summary",
         wiki_summary,
-        description="维基百科摘要。query 为词条；lang 默认 zh。",
+        description=(
+            "Wikipedia article summary. query is the article title or keywords; "
+            "lang is the Wikipedia language code (default en, e.g. zh, de, fr)."
+        ),
     )

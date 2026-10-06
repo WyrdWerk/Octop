@@ -1,7 +1,11 @@
 id: ip-lookup
-version: 0.1.0
+version: 0.1.1
 name: IP 查询
 description: 查询 IP 归属地与 ISP 信息
+i18n:
+  en:
+    name: IP Lookup
+    description: Look up IP geolocation and ISP
 icon: icon.svg
 group: tools
 kind: tool

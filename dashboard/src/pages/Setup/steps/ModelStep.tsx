@@ -102,7 +102,7 @@ interface Props {
 
 type SetupMode = "preset" | "custom";
 
-/** Match admin/models: domestic cloud first; overseas + local behind "more". */
+/** Match admin/models: global providers first; other clouds + local behind "more". */
 function buildWizardPresetDisplay(presets: ProviderPreset[]): {
   featured: PresetDisplayItem[];
   more: PresetDisplayItem[];

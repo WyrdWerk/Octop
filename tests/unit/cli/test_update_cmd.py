@@ -11,6 +11,14 @@ from octop.cli.main import cli
 from octop.infra.setup import self_update
 
 
+@pytest.fixture(autouse=True)
+def _self_update_enabled(monkeypatch: pytest.MonkeyPatch) -> None:
+    """These tests cover the upstream upgrade flow; the fork disables it by default."""
+    monkeypatch.setenv("OCTOP_DISABLE_SELF_UPDATE", "0")
+    monkeypatch.setenv("OCTOP_USE_CN_MIRRORS", "1")
+    monkeypatch.delenv("OCTOP_PYPI_MIRRORS", raising=False)
+
+
 def test_update_check_only_no_install(monkeypatch: pytest.MonkeyPatch) -> None:
     import octop.cli.commands.update as update_cmd
 

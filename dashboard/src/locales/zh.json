@@ -3564,8 +3564,21 @@
         "restart": {
           "title": "升级后重启",
           "body": "包更新完成后需要重启进程才生效。任选与你的启动方式匹配的命令："
+        },
+        "deployer": {
+          "title": "托管部署",
+          "body": "如果实例由他人代为运维，由对方负责发布新版本。问题反馈或更新请求请提交到 GitHub："
+        },
+        "sourceFork": {
+          "title": "从源码安装（本分支）",
+          "body": "克隆或拉取 github.com/WyrdWerk/Octop，构建控制台后重新安装："
         }
-      }
+      },
+      "managedTitle": "更新由部署方管理",
+      "managedBody": "当前 Octop 构建维护于 github.com/WyrdWerk/Octop。为避免被上游 PyPI 包覆盖，已关闭在线升级。请联系部署该实例的管理员发布新版本，或按右侧指南从源码或 Docker 重新构建。",
+      "managedEnvHint": "运维人员可设置 OCTOP_DISABLE_SELF_UPDATE=0 重新启用在线升级。",
+      "descriptionManaged": "查看当前运行版本，以及本部署的更新方式。",
+      "guideIntroManaged": "请选择与本实例部署方式一致的更新方法。升级后需重启；数据保留在 ~/.octop（或 OCTOP_HOME）。"
     }
   },
   "agentConfig": {

@@ -17,6 +17,8 @@ export interface OctopHitlSettings {
 
 export interface OctopCapabilitiesSettings {
   mobile: { enabled: boolean; backend: string };
+  /** IM channel kinds offered by this deployment; ``null`` = every kind. */
+  channel_kinds?: string[] | null;
 }
 
 export interface CaptchaPairView {

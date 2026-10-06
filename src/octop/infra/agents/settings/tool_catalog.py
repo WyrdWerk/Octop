@@ -202,7 +202,9 @@ def builtin_tool_available(
             return False
         return not (isinstance(media, dict) and media.get("enabled") is False)
     if name in _WEB_SEARCH_TOOLS:
-        return agent_cfg.get("web_search_tools") is not False
+        from octop.infra.agents.settings.web_search import web_search_tool_available
+
+        return web_search_tool_available(name, agent_cfg)
     if name == "acp_runner":
         acp = agent_cfg.get("acp")
         if isinstance(acp, dict):

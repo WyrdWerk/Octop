@@ -34,10 +34,24 @@ def test_bge_small_zh_infers_hf_repo_without_fastembed(monkeypatch) -> None:
     assert "direct_url" not in meta
 
 
+def test_candidates_default_to_official_hf_only(monkeypatch) -> None:
+    from octop.infra.agents.providers import onnx_catalog as catalog
+
+    monkeypatch.setattr(catalog, "_fastembed_meta_map", lambda: {})
+    monkeypatch.delenv("OCTOP_USE_CN_MIRRORS", raising=False)
+    monkeypatch.delenv("OCTOP_ONNX_COS_BASE", raising=False)
+    cands = build_download_candidates("BAAI/bge-small-zh-v1.5")
+    assert [c.kind for c in cands] == ["hf"]
+    monkeypatch.setenv("OCTOP_ONNX_COS_BASE", "https://models.example.com")
+    assert [c.kind for c in build_download_candidates("BAAI/bge-small-zh-v1.5")] == ["cos", "hf"]
+
+
 def test_candidates_are_cos_hf_and_mirror_with_inferred_urls(monkeypatch) -> None:
     from octop.infra.agents.providers import onnx_catalog as catalog
 
     monkeypatch.setattr(catalog, "_fastembed_meta_map", lambda: {})
+    monkeypatch.setenv("OCTOP_USE_CN_MIRRORS", "1")
+    monkeypatch.delenv("OCTOP_ONNX_COS_BASE", raising=False)
     cands = build_download_candidates("BAAI/bge-small-zh-v1.5")
     assert [c.kind for c in cands] == ["cos", "hf", "hf-mirror"]
     assert cands[0].probe_url == (
@@ -58,6 +72,8 @@ def test_unknown_model_uses_model_id_as_hf_repo(monkeypatch) -> None:
     from octop.infra.agents.providers import onnx_catalog as catalog
 
     monkeypatch.setattr(catalog, "_fastembed_meta_map", lambda: {})
+    monkeypatch.setenv("OCTOP_USE_CN_MIRRORS", "1")
+    monkeypatch.delenv("OCTOP_ONNX_COS_BASE", raising=False)
     cands = build_download_candidates("jinaai/jina-embeddings-v2-base-zh")
     assert [c.kind for c in cands] == ["cos", "hf", "hf-mirror"]
     assert cands[1].hf_repo == "jinaai/jina-embeddings-v2-base-zh"

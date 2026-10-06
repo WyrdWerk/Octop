@@ -23,6 +23,7 @@ from octop_harness.backends.workspace import BackendWorkspace
 from octop.infra.agents.manager import AgentCreateSpec
 from octop.infra.agents.workspace.dir import DEFAULT_SYSTEM_FILES_PATH
 from octop.infra.errors import ErrorCode, OctopError
+from octop.infra.utils.region_defaults import hidden_experts, is_hidden
 
 logger = logging.getLogger(__name__)
 
@@ -868,11 +869,16 @@ class ExpertCatalog:
         library tab.
         """
         summaries: list[ExpertSummary] = []
+        # Region-specific bundled templates (OCTOP_EXPERT_HIDDEN) stay
+        # resolvable via get() so existing agents keep working.
+        hidden = hidden_experts()
         for expert in self._experts.values():
             ex_id = expert.summary.id
             if ex_id == "default":
                 continue
             if not include_market_cache and ex_id not in self._bundled_ids:
+                continue
+            if ex_id in self._bundled_ids and is_hidden(ex_id, hidden):
                 continue
             summaries.append(expert.summary)
         summaries.sort(key=lambda s: (0 if s.id == "general-assistant" else 1, s.id))

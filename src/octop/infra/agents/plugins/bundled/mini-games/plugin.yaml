@@ -1,7 +1,11 @@
 id: mini-games
-version: 0.2.2
+version: 0.2.3
 name: 小游戏
 description: 井字棋与猜数字，在聊天中展示棋盘与提示
+i18n:
+  en:
+    name: Mini Games
+    description: Tic-tac-toe and number guessing with in-chat boards
 icon: icon.svg
 group: games
 kind: tool
