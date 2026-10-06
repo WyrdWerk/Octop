@@ -13,11 +13,11 @@ describe("PwaInstallPrompt in desktop shell", () => {
       value: { invoke: () => undefined },
     });
     render(<PwaInstallPrompt appearance="chatFloat" />);
-    expect(screen.queryByLabelText("安装应用")).toBeNull();
+    expect(screen.queryByLabelText("pwa.installApp")).toBeNull();
   });
 
   it("still offers install in a regular browser", () => {
     render(<PwaInstallPrompt appearance="chatFloat" />);
-    expect(screen.getByLabelText("安装应用")).toBeInTheDocument();
+    expect(screen.getByLabelText("pwa.installApp")).toBeInTheDocument();
   });
 });
