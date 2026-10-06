@@ -333,7 +333,7 @@ def test_default_timezone_written_on_fresh_config(tmp_path: Path):
     cfg = load_config(tmp_path / "config.json")
     assert cfg.default_timezone == "UTC"
     written = json.loads((tmp_path / "config.json").read_text(encoding="utf-8"))
-    assert written["default_timezone"] == "Asia/Shanghai"
+    assert written["default_timezone"] == "UTC"
     assert "cron_timezone" not in written
 
 
