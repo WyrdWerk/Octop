@@ -11,6 +11,9 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+from octop.infra.connectors.locale_ctx import ctr
+
+_I18N = "connector.gateway.cli_install."
 _INSTALL_TIMEOUT_S = 300.0
 _VERSION_RE = re.compile(r"(\d+\.\d+\.\d+(?:[-+][\w.]+)?)")
 # fnOS / 容器里 Octop 常以非 root 用户运行，npm 全局目录（/usr/local）不可写，
@@ -158,7 +161,7 @@ def install_connector_cli(kind: str) -> dict[str, Any]:
     if not npm:
         return _fail(
             status,
-            f"未找到 npm，请先在 Octop 主机安装 Node.js，然后执行：{status['install_command']}",
+            ctr(_I18N + "npm_missing", command=status["install_command"]),
         )
 
     # npm 全局目录（默认 /usr/local）不可写时（fnOS/容器内非 root 用户），
@@ -188,25 +191,25 @@ def install_connector_cli(kind: str) -> dict[str, Any]:
     except subprocess.TimeoutExpired:
         return _fail(
             status,
-            f"安装超时（>{int(_INSTALL_TIMEOUT_S)}s）。请在主机手动执行：{status['install_command']}",
+            ctr(
+                _I18N + "timeout",
+                seconds=int(_INSTALL_TIMEOUT_S),
+                command=status["install_command"],
+            ),
         )
     except OSError as exc:
-        return _fail(status, f"无法启动 npm：{exc}")
+        return _fail(status, ctr(_I18N + "npm_start_failed", error=exc))
 
     if completed.returncode != 0:
         detail = (completed.stderr or completed.stdout or "").strip()
         if len(detail) > 800:
             detail = detail[-800:]
-        msg = f"npm install 失败（exit {completed.returncode}）"
         if detail:
-            msg = f"{msg}：{detail}"
-        if user_prefix is not None:
-            msg = (
-                f"{msg}。已尝试写入用户级目录（~/.npm-global）仍失败，"
-                f"请在主机手动执行：{status['install_command']}"
-            )
+            msg = ctr(_I18N + "npm_failed_detail", code=completed.returncode, detail=detail)
         else:
-            msg = f"{msg}。请在主机手动执行：{status['install_command']}"
+            msg = ctr(_I18N + "npm_failed", code=completed.returncode)
+        follow_up = "user_prefix_failed" if user_prefix is not None else "manual"
+        msg = ctr(_I18N + follow_up, msg=msg, command=status["install_command"])
         return _fail(status, msg)
 
     # 降级安装到用户级目录后，把该 bin 目录加入进程 PATH，使状态检测与后续 CLI 调用可见。
@@ -224,9 +227,11 @@ def install_connector_cli(kind: str) -> dict[str, Any]:
     if not refreshed["installed"]:
         return _fail(
             refreshed,
-            "npm install 已完成，但 PATH 中仍找不到 "
-            f"{refreshed['binary']!r}。请确认全局 bin 目录在 PATH 中，"
-            f"或手动执行：{refreshed['install_command']}",
+            ctr(
+                _I18N + "not_on_path",
+                binary=refreshed["binary"],
+                command=refreshed["install_command"],
+            ),
         )
     return {
         "ok": True,

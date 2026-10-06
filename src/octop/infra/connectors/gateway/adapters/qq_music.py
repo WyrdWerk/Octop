@@ -7,6 +7,15 @@ from typing import Any
 
 import httpx
 
+from octop.infra.connectors.locale_ctx import ctr
+
+_I18N = "connector.gateway."
+
+
+def _provider() -> str:
+    return ctr(_I18N + "providers.qq_music")
+
+
 BASE_URL = "https://a.y.qq.com"
 SKILL_VERSION = "0.0.3"
 
@@ -111,12 +120,9 @@ def probe_credentials(creds: dict[str, Any]) -> None:
 def _api_key(creds: dict[str, Any]) -> str:
     api_key = str(creds.get("api_key") or "").strip()
     if not api_key:
-        raise ValueError("请填写 QQ 音乐 API Key")
+        raise ValueError(ctr(_I18N + "common.api_key_required", provider=_provider()))
     if not api_key.startswith("qmk-"):
-        raise ValueError(
-            "QQ 音乐需使用 qmk- 开头的 API Key，请登录 "
-            "https://y.qq.com/n/ryqq_v2/qqmusic_skills 获取"
-        )
+        raise ValueError(ctr(_I18N + "qq_music.key_prefix"))
     return api_key
 
 
@@ -130,7 +136,7 @@ def _post(creds: dict[str, Any], path: str, params: dict[str, Any]) -> str:
     with httpx.Client(timeout=30.0) as client:
         r = client.post(f"{BASE_URL}{path}", headers=headers, json=body)
         if r.status_code == 401:
-            raise ValueError("QQ 音乐 API Key 无效或已过期")
+            raise ValueError(ctr(_I18N + "qq_music.expired"))
         r.raise_for_status()
         payload = r.json()
     if isinstance(payload, dict):
@@ -138,8 +144,17 @@ def _post(creds: dict[str, Any], path: str, params: dict[str, Any]) -> str:
         msg = str(payload.get("msg") or "")
         if ret not in (0, None, "0") and "route not found" not in msg:
             if ret in (11534343, "11534343") or "unauthorized" in msg.lower():
-                raise ValueError(f"QQ 音乐 API Key 无效: {msg or ret}")
+                raise ValueError(
+                    ctr(_I18N + "common.api_key_invalid", provider=_provider(), detail=msg or ret)
+                )
             # Some endpoints return ret!=0 with empty msg for empty personalized data.
             if msg:
-                raise ValueError(f"QQ 音乐接口错误 [{ret}]: {msg}")
+                raise ValueError(
+                    ctr(
+                        _I18N + "common.api_error_code",
+                        provider=_provider(),
+                        code=ret,
+                        detail=msg,
+                    )
+                )
     return json.dumps(payload, ensure_ascii=False, indent=2)

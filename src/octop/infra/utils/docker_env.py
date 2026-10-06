@@ -14,6 +14,9 @@ import subprocess
 import sys
 from typing import Any
 
+from octop.i18n.loader import tr
+from octop.infra.utils.locale import DEFAULT_LOCALE
+
 logger = logging.getLogger(__name__)
 
 _INSTALL_TIMEOUT_SEC = 180
@@ -268,68 +271,27 @@ def agent_prompt(
     *,
     plat: str | None = None,
     status: str = "missing",
+    locale: str = DEFAULT_LOCALE,
 ) -> str:
     """Natural-language prompt tailored to platform + current Docker status."""
     key = plat or _platform_key()
     host = platform.platform()
 
     if status in {"ready", "installed"}:
-        return f"本机 Docker 已可用（系统：{host}）。请运行 `docker info` 确认，无需再安装。"
+        return tr("docker_env.ready", locale, host=host)
 
+    variant = key if key in {"darwin", "linux", "win32"} else "other"
     if status == "daemon_down":
-        if key == "darwin":
-            return (
-                "本机已有 docker 命令，但 daemon 未响应。"
-                f"当前系统：{host}。"
-                "请先检查并启动 Docker Desktop 或 OrbStack（`open -a Docker` / `open -a OrbStack`）；"
-                "若应用已卸载，再用 `brew install --cask docker` 或 `brew install --cask orbstack` 重装。"
-                "若 `docker context` 指向已不存在的环境（如 orbstack），请切回可用 context 后执行 `docker info` 直到成功。"
-            )
-        if key == "linux":
-            return (
-                "本机已有 docker 命令，但 daemon 未响应。"
-                f"当前系统：{host}。"
-                "请执行 `sudo systemctl start docker`（并视情况 `enable`），"
-                "确认当前用户在 `docker` 组后运行 `docker info`。"
-            )
-        if key == "win32":
-            return (
-                "本机已有 docker 命令，但 daemon 未响应。"
-                f"当前系统：{host}。"
-                "请启动 Docker Desktop，等待其就绪后运行 `docker info`。"
-            )
-        return (
-            f"本机已有 docker CLI，但 daemon 未响应（系统：{host}）。"
-            "请启动 Docker 服务后验证 `docker info`。"
-        )
-
-    if key == "linux":
-        return (
-            "请在本机帮我安装并启用 Docker Engine，使 `docker info` 可用。"
-            f"当前系统：{host}。"
-            "优先用官方脚本 `curl -fsSL https://get.docker.com | sudo sh`，"
-            "并把当前用户加入 `docker` 组；完成后验证 `docker info`。"
-            "如需 sudo 密码请提示我手动输入，不要把密钥写进命令历史。"
-        )
-    if key == "darwin":
-        return (
-            "请帮我在 macOS 上安装 Docker Desktop（可用 `brew install --cask docker`），"
-            "并引导我打开 Docker.app，直到 `docker info` 成功。"
-            f"当前系统：{host}。"
-        )
-    if key == "win32":
-        return (
-            "请指导我在 Windows 上安装 Docker Desktop（含 WSL2 如需要），"
-            "并确认安装后 `docker info` 可用。"
-            f"当前系统：{host}。"
-        )
-    return (
-        f"请帮我在当前系统（{host}）安装 Docker，并验证 `docker info` 可用。"
-        f"参考文档：{_DOCS_BY_PLATFORM.get('linux')}"
+        return tr(f"docker_env.daemon_down.{variant}", locale, host=host)
+    return tr(
+        f"docker_env.install.{variant}",
+        locale,
+        host=host,
+        docs=_DOCS_BY_PLATFORM.get("linux"),
     )
 
 
-def docker_status(*, attempt_install: bool = False) -> dict[str, Any]:
+def docker_status(*, attempt_install: bool = False, locale: str = DEFAULT_LOCALE) -> dict[str, Any]:
     """Return Docker environment status (+ optional best-effort install on Linux)."""
     plat = _platform_key()
     docs = _DOCS_BY_PLATFORM.get(plat, _DOCS_BY_PLATFORM["linux"])
@@ -390,7 +352,7 @@ def docker_status(*, attempt_install: bool = False) -> dict[str, Any]:
         "daemon": daemon,
         "docs_url": docs,
         "install_script": install_script(plat=plat, status=status),
-        "agent_prompt": agent_prompt(plat=plat, status=status),
+        "agent_prompt": agent_prompt(plat=plat, status=status, locale=locale),
         "can_auto_install": can_auto,
         "status": status,
         "reason": reason,
@@ -398,9 +360,9 @@ def docker_status(*, attempt_install: bool = False) -> dict[str, Any]:
     }
 
 
-def ensure_docker() -> dict[str, Any]:
+def ensure_docker(*, locale: str = DEFAULT_LOCALE) -> dict[str, Any]:
     """Best-effort ensure Docker is usable (detect + optional Linux auto-install)."""
-    return docker_status(attempt_install=True)
+    return docker_status(attempt_install=True, locale=locale)
 
 
 __all__ = [

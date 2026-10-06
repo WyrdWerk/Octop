@@ -7,6 +7,7 @@ from typing import Any
 
 from octop.infra.connectors.catalog import get_catalog_entry, get_mcp_oauth_remote
 from octop.infra.connectors.custom_mcp import CUSTOM_MCP_KIND
+from octop.infra.connectors.locale_ctx import ctr
 from octop.infra.connectors.oauth.discovery import discover_oauth_from_mcp_url
 from octop.infra.connectors.oauth.mcp import (
     build_authorize_url,
@@ -113,7 +114,7 @@ async def exchange_pasted_auth_code(
     del settings_repo, extra
     code = code.strip()
     if not code:
-        raise ValueError("授权码不能为空")
+        raise ValueError(ctr("connector.oauth.auth_code_required"))
 
     if kind in _AUTH_CODE_PASSTHROUGH_KINDS:
         return {"cookie": code}

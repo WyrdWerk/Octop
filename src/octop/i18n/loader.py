@@ -62,3 +62,14 @@ def flatten_keys(table: dict[str, Any], prefix: str = "") -> set[str]:
 
 def all_keys_for_locale(locale: Locale = "en") -> set[str]:
     return flatten_keys(_load_all()[locale])
+
+
+def all_locale_variants(*keys: str) -> set[str]:
+    """Every locale's text for *keys* (match messages regardless of UI locale)."""
+    out: set[str] = set()
+    for key in keys:
+        for loc in ("en", "zh"):
+            text = lookup(key, loc)
+            if text is not None:
+                out.add(text)
+    return out

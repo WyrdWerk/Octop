@@ -344,7 +344,7 @@ def test_docs_search_requires_user_auth_without_shell_hint(
         "octop.infra.connectors.gateway.adapters.feishu_cli.run_cli",
         _fake_run,
     )
-    with pytest.raises(ValueError, match="连接器") as ei:
+    with pytest.raises(ValueError, match="Connectors") as ei:
         feishu_cli.call_tool(
             {"app_id": "a1", "app_secret": "s1", "instance_id": "i1"},
             "doc",
@@ -438,7 +438,7 @@ def test_docs_search_missing_scope_message(monkeypatch: pytest.MonkeyPatch, tmp_
         "octop.infra.connectors.gateway.adapters.feishu_cli.run_cli",
         _fake_run,
     )
-    with pytest.raises(ValueError, match="登录授权") as ei:
+    with pytest.raises(ValueError, match="Authorize login") as ei:
         feishu_cli.call_tool(
             {
                 "app_id": "a1",
@@ -457,10 +457,10 @@ def test_humanize_missing_search_scope() -> None:
         "missing required scope(s): search:docs:read"
         ' | run `lark-cli auth login --scope "search:docs:read"`'
     )
-    assert "连接器" in msg
-    assert "登录授权" in msg
+    assert "Connectors" in msg
+    assert "Authorize login" in msg
     assert "lark-cli" not in msg
-    assert "禁止" in msg
+    assert "Never suggest" in msg
 
 
 def test_humanize_rejects_bot_as_for_user_only_commands() -> None:
@@ -468,7 +468,7 @@ def test_humanize_rejects_bot_as_for_user_only_commands() -> None:
         "--as bot is not supported, this command only supports: user"
         ' | run `lark-cli auth login --scope "search:docs:read"`'
     )
-    assert "连接器" in msg
+    assert "Connectors" in msg
     assert "lark-cli" not in msg
     assert "auth login" not in msg
-    assert "禁止" in msg
+    assert "Never suggest" in msg

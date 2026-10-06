@@ -1003,9 +1003,9 @@ def test_meituan_travel_requires_query():
 def test_meituan_travel_probe_is_format_only():
     from octop.infra.connectors.gateway.adapters import meituan_travel
 
-    with pytest.raises(ValueError, match="格式"):
+    with pytest.raises(ValueError, match="format"):
         meituan_travel.probe_credentials({"api_key": "short"})
-    with pytest.raises(ValueError, match="格式"):
+    with pytest.raises(ValueError, match="format"):
         meituan_travel.probe_credentials({"api_key": "not-hex!!!!!!!!!!!"})
     meituan_travel.probe_credentials({"api_key": "a" * 32})
 
@@ -1040,7 +1040,7 @@ def test_qq_music_api_key_prefix():
 def test_ctrip_wendao_token_format():
     from octop.infra.connectors.gateway.adapters import ctrip_wendao
 
-    with pytest.raises(ValueError, match="Token"):
+    with pytest.raises(ValueError, match="token"):
         ctrip_wendao.probe_credentials({"api_key": "short"})
     ctrip_wendao.probe_credentials({"api_key": "0123456789abcdef0123456789abcdef"})
 

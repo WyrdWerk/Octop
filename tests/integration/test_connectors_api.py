@@ -839,3 +839,19 @@ async def test_oauth_callback_escapes_error_html(env, exchange_error):
     assert response.status_code == 400
     assert payload not in response.text
     assert escape(payload) in response.text
+
+
+async def test_probe_errors_follow_accept_language(env):
+    c, _, auth, _ = env
+    body = {"kind": "ctrip-wendao", "credentials": {"api_key": "short"}}
+    en = await c.post("/api/connectors/test-credentials", headers=auth, json=body)
+    zh = await c.post(
+        "/api/connectors/test-credentials",
+        headers={**auth, "Accept-Language": "zh-CN"},
+        json=body,
+    )
+    assert en.status_code == 200, en.text
+    assert zh.status_code == 200, zh.text
+    assert en.json()["ok"] is False
+    assert "token format is invalid" in en.json()["error"]
+    assert "格式不正确" in zh.json()["error"]

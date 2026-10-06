@@ -7,6 +7,10 @@ from typing import Any
 
 import httpx
 
+from octop.infra.connectors.locale_ctx import ctr
+
+_I18N = "connector.gateway."
+
 TOOLS: list[dict[str, Any]] = [
     {
         "name": "list_notebooks",
@@ -495,7 +499,7 @@ def _http_error_message(response: httpx.Response) -> str:
     except Exception:
         pass
     if response.status_code == 401:
-        return "IMA 认证失败，请检查 Client ID 与 API Key"
+        return ctr("connector.gateway.tencent_ima.auth_failed")
     return f"HTTP {response.status_code}"
 
 

@@ -8,6 +8,15 @@ from typing import Any
 
 import httpx
 
+from octop.infra.connectors.locale_ctx import ctr, localize_schema
+
+_I18N = "connector.gateway."
+
+
+def _provider() -> str:
+    return ctr(_I18N + "providers.meituan_travel")
+
+
 QUERY_URL = "https://mcp-open-cater.meituan.com/v1/api/voyage/openapi/query"
 _TOKEN_RE = re.compile(r"^[0-9a-f]{32,}$", re.I)
 
@@ -27,7 +36,7 @@ TOOLS: list[dict[str, Any]] = [
                 },
                 "city": {
                     "type": "string",
-                    "description": "City context, default 北京",
+                    "description": "i18n:connector.gateway.tools.meituan_travel.city",
                 },
             },
             "required": ["query"],
@@ -37,7 +46,7 @@ TOOLS: list[dict[str, Any]] = [
 
 
 def list_tools() -> list[dict[str, Any]]:
-    return TOOLS
+    return localize_schema(TOOLS)
 
 
 def call_tool(creds: dict[str, Any], name: str, args: dict[str, Any]) -> str:
@@ -61,7 +70,7 @@ def travel_query(creds: dict[str, Any], args: dict[str, Any]) -> str:
     with httpx.Client(timeout=120.0) as client:
         r = client.post(QUERY_URL, headers=headers, json=body)
         if r.status_code == 401:
-            raise ValueError("美团旅游 API Key 无效: 鉴权失败")
+            raise ValueError(ctr(_I18N + "meituan_travel.auth_failed"))
         r.raise_for_status()
         payload = r.json()
     if not isinstance(payload, dict):
@@ -71,11 +80,19 @@ def travel_query(creds: dict[str, Any], args: dict[str, Any]) -> str:
     data = payload.get("data")
     auth_hints = ("鉴权失败", "无效的访问令牌", "unauthorized", "token无效", "访问令牌已过期")
     if code in (401, "401") or any(h in msg for h in auth_hints):
-        raise ValueError(f"美团旅游 API Key 无效: {msg or code}")
+        raise ValueError(
+            ctr(_I18N + "common.api_key_invalid", provider=_provider(), detail=msg or code)
+        )
     if isinstance(data, str) and any(h in data for h in auth_hints):
-        raise ValueError(f"美团旅游 API Key 无效: {data[:200]}")
+        raise ValueError(
+            ctr(_I18N + "common.api_key_invalid", provider=_provider(), detail=data[:200])
+        )
     if code not in (0, "0", None):
-        raise ValueError(f"美团旅游接口错误 [{code}]: {msg or code}")
+        raise ValueError(
+            ctr(
+                _I18N + "common.api_error_code", provider=_provider(), code=code, detail=msg or code
+            )
+        )
     if isinstance(data, str) and data.strip():
         return data
     return json.dumps(payload, ensure_ascii=False, indent=2)
@@ -89,10 +106,7 @@ def probe_credentials(creds: dict[str, Any]) -> None:
 def _api_key(creds: dict[str, Any]) -> str:
     api_key = str(creds.get("api_key") or creds.get("token") or "").strip()
     if not api_key:
-        raise ValueError("请填写美团旅游 API Key")
+        raise ValueError(ctr(_I18N + "common.api_key_required", provider=_provider()))
     if not _TOKEN_RE.match(api_key):
-        raise ValueError(
-            "美团旅游 API Key 格式不正确，请打开 "
-            "https://developer.meituan.com/zh/v2/dev/token 复制完整 Token"
-        )
+        raise ValueError(ctr(_I18N + "meituan_travel.bad_format"))
     return api_key

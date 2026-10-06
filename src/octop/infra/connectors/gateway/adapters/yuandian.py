@@ -8,22 +8,30 @@ from urllib.parse import urlencode
 
 import httpx
 
+from octop.infra.connectors.locale_ctx import ctr, localize_schema
+
 BASE_URL = "https://open.chineselaw.com/open"
+_I18N = "connector.gateway."
+
+
+def _provider() -> str:
+    return ctr(_I18N + "providers.yuandian")
+
 
 TOOLS: list[dict[str, Any]] = [
     {
         "name": "search_laws",
-        "description": "语义检索法律法规与法条",
+        "description": "i18n:connector.gateway.tools.yuandian.search_laws",
         "inputSchema": {
             "type": "object",
             "properties": {
                 "query": {
                     "type": "string",
-                    "description": "自然语言法律问题或检索词",
+                    "description": "i18n:connector.gateway.tools.yuandian.search_laws_query",
                 },
                 "return_num": {
                     "type": "integer",
-                    "description": "返回条数，默认 10",
+                    "description": "i18n:connector.gateway.tools.yuandian.return_num",
                 },
             },
             "required": ["query"],
@@ -31,13 +39,13 @@ TOOLS: list[dict[str, Any]] = [
     },
     {
         "name": "search_cases",
-        "description": "语义检索裁判案例与典型案例",
+        "description": "i18n:connector.gateway.tools.yuandian.search_cases",
         "inputSchema": {
             "type": "object",
             "properties": {
                 "query": {
                     "type": "string",
-                    "description": "自然语言案情或检索词",
+                    "description": "i18n:connector.gateway.tools.yuandian.search_cases_query",
                 },
             },
             "required": ["query"],
@@ -45,14 +53,17 @@ TOOLS: list[dict[str, Any]] = [
     },
     {
         "name": "search_enterprises",
-        "description": "按企业名称检索企业候选（获取企业 ID / 统一社会信用代码）",
+        "description": "i18n:connector.gateway.tools.yuandian.search_enterprises",
         "inputSchema": {
             "type": "object",
             "properties": {
-                "name": {"type": "string", "description": "企业名称关键词"},
+                "name": {
+                    "type": "string",
+                    "description": "i18n:connector.gateway.tools.yuandian.enterprise_name_keyword",
+                },
                 "top_k": {
                     "type": "integer",
-                    "description": "返回候选数量，默认 10，最大 50",
+                    "description": "i18n:connector.gateway.tools.yuandian.top_k",
                 },
             },
             "required": ["name"],
@@ -60,17 +71,17 @@ TOOLS: list[dict[str, Any]] = [
     },
     {
         "name": "get_enterprise",
-        "description": "按企业名称查询企业详情候选列表",
+        "description": "i18n:connector.gateway.tools.yuandian.get_enterprise",
         "inputSchema": {
             "type": "object",
             "properties": {
                 "name": {
                     "type": "string",
-                    "description": "企业名称、曾用名或股票简称",
+                    "description": "i18n:connector.gateway.tools.yuandian.enterprise_name",
                 },
                 "num": {
                     "type": "integer",
-                    "description": "返回数量，默认 2",
+                    "description": "i18n:connector.gateway.tools.yuandian.num",
                 },
             },
             "required": ["name"],
@@ -78,13 +89,13 @@ TOOLS: list[dict[str, Any]] = [
     },
     {
         "name": "detect_hallucination",
-        "description": "校验文本中的法律引用是否准确（约 15 秒，请耐心等待）",
+        "description": "i18n:connector.gateway.tools.yuandian.detect_hallucination",
         "inputSchema": {
             "type": "object",
             "properties": {
                 "text": {
                     "type": "string",
-                    "description": "待校验原文（含法规/案号引用）",
+                    "description": "i18n:connector.gateway.tools.yuandian.detect_text",
                 },
             },
             "required": ["text"],
@@ -94,7 +105,7 @@ TOOLS: list[dict[str, Any]] = [
 
 
 def list_tools() -> list[dict[str, Any]]:
-    return TOOLS
+    return localize_schema(TOOLS)
 
 
 def call_tool(creds: dict[str, Any], name: str, args: dict[str, Any]) -> str:
@@ -170,9 +181,9 @@ def probe_credentials(creds: dict[str, Any]) -> None:
 def _api_key(creds: dict[str, Any]) -> str:
     api_key = str(creds.get("api_key") or creds.get("token") or "").strip()
     if not api_key:
-        raise ValueError("请填写元典 API Key")
+        raise ValueError(ctr(_I18N + "common.api_key_required", provider=_provider()))
     if not api_key.startswith("sk_"):
-        raise ValueError("元典 API Key 应以 sk_ 开头，请从开放平台复制完整 Key")
+        raise ValueError(ctr(_I18N + "yuandian.key_prefix"))
     return api_key
 
 
@@ -200,7 +211,13 @@ def _request(
             headers["Content-Type"] = "application/json; charset=utf-8"
             r = client.post(url, headers=headers, json=json_body or {})
         if r.status_code in (401, 403):
-            raise ValueError(f"元典 API Key 无效: HTTP {r.status_code}")
+            raise ValueError(
+                ctr(
+                    _I18N + "common.api_key_invalid",
+                    provider=_provider(),
+                    detail=f"HTTP {r.status_code}",
+                )
+            )
         r.raise_for_status()
         payload = r.json()
     if not isinstance(payload, dict):
@@ -208,14 +225,20 @@ def _request(
     if payload.get("success") is False:
         msg = str(payload.get("message") or payload.get("error_code") or "error")
         if "api" in msg.lower() and "key" in msg.lower():
-            raise ValueError(f"元典 API Key 无效: {msg}")
-        raise ValueError(f"元典接口错误: {msg}")
+            raise ValueError(
+                ctr(_I18N + "common.api_key_invalid", provider=_provider(), detail=msg)
+            )
+        raise ValueError(ctr(_I18N + "common.api_error", provider=_provider(), detail=msg))
     code = payload.get("code")
     # OpenAPI success codes include 200 / 201; some endpoints omit code.
     if code is not None and code not in (0, 200, 201, "0", "200", "201"):
         msg = str(payload.get("message") or payload.get("msg") or code)
         low = msg.lower()
         if "api" in low and "key" in low:
-            raise ValueError(f"元典 API Key 无效: {msg}")
-        raise ValueError(f"元典接口错误 [{code}]: {msg}")
+            raise ValueError(
+                ctr(_I18N + "common.api_key_invalid", provider=_provider(), detail=msg)
+            )
+        raise ValueError(
+            ctr(_I18N + "common.api_error_code", provider=_provider(), code=code, detail=msg)
+        )
     return json.dumps(payload, ensure_ascii=False, indent=2)

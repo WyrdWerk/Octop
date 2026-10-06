@@ -37,7 +37,9 @@ def test_status_daemon_down(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(docker_mod, "_daemon_ok", lambda: False)
     result = docker_status(attempt_install=False)
     assert result["status"] == "daemon_down"
-    assert "未响应" in result["agent_prompt"]
+    assert "not responding" in result["agent_prompt"]
+    zh = docker_status(attempt_install=False, locale="zh")
+    assert "未响应" in zh["agent_prompt"]
     assert "CLI is present" in result["install_script"]
     assert "open -a Docker" in result["install_script"]
 
@@ -46,8 +48,11 @@ def test_agent_prompt_missing_vs_daemon_down() -> None:
     missing = docker_mod.agent_prompt(plat="darwin", status="missing")
     down = docker_mod.agent_prompt(plat="darwin", status="daemon_down")
     assert "brew install --cask docker" in missing
-    assert "已有 docker" in down
+    assert "docker command is installed" in down
     assert missing != down
+    assert "已有 docker" in docker_mod.agent_prompt(
+        plat="darwin", status="daemon_down", locale="zh"
+    )
 
 
 def test_status_missing(monkeypatch: pytest.MonkeyPatch) -> None:
