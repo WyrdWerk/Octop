@@ -21,6 +21,10 @@ export interface UpdateStatus {
   stable_only?: boolean;
   /** True when latest_version is a PEP 440 pre-release. */
   latest_is_prerelease?: boolean;
+  /** True when in-place upgrades are disabled (OCTOP_DISABLE_SELF_UPDATE, fork default). */
+  managed_by_deployer?: boolean;
+  /** Server-provided explanation shown when ``managed_by_deployer`` is true. */
+  managed_message?: string | null;
 }
 
 export interface UpgradeStarted {

@@ -27,6 +27,14 @@ from octop.infra.setup.self_update import (
 )
 
 
+@pytest.fixture(autouse=True)
+def _self_update_enabled(monkeypatch: pytest.MonkeyPatch) -> None:
+    """These tests cover the upstream upgrade flow; the fork disables it by default."""
+    monkeypatch.setenv("OCTOP_DISABLE_SELF_UPDATE", "0")
+    monkeypatch.setenv("OCTOP_USE_CN_MIRRORS", "1")
+    monkeypatch.delenv("OCTOP_PYPI_MIRRORS", raising=False)
+
+
 def test_pep440_order() -> None:
     assert parse_version("0.9.34a1") < parse_version("0.9.34b1")
     assert parse_version("0.9.34b1") < parse_version("0.9.34rc1")

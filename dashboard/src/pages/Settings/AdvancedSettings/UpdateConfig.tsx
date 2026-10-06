@@ -25,8 +25,18 @@ import {
 import { TabPanelHeader } from "./TabPanelHeader";
 import styles from "./UpdateConfig.module.less";
 
+/** Source repository of this fork (issues, releases, source installs). */
+const FORK_REPO_URL = "https://github.com/WyrdWerk/Octop";
+
 /** Shell snippets shown in the manual upgrade guide (commands are locale-agnostic). */
 const UPGRADE_GUIDE_CODE = {
+  deployer: `${FORK_REPO_URL}/issues`,
+  sourceFork: `git clone ${FORK_REPO_URL}.git   # first time
+cd Octop
+git pull
+make build-frontend
+# or: cd dashboard && npm ci && npm run build && cd ..
+pip install -e .`,
   installerUnix: `curl -fsSL https://finnie-1258344699.cos.ap-guangzhou.myqcloud.com/octop/install.sh | bash`,
   installerWin: `irm https://finnie-1258344699.cos.ap-guangzhou.myqcloud.com/octop/install.ps1 | iex`,
   cli: `octop update
@@ -62,6 +72,8 @@ octop run`,
 } as const;
 
 type GuideMethodKey =
+  | "deployer"
+  | "sourceFork"
   | "ui"
   | "installer"
   | "cli"
@@ -69,6 +81,18 @@ type GuideMethodKey =
   | "source"
   | "docker"
   | "restart";
+
+/**
+ * Guide when in-place upgrades are disabled (default for this fork): the
+ * upstream installer / ``octop update`` / ``pip install -U octop`` paths would
+ * replace this build with the upstream PyPI package, so they are not shown.
+ */
+const MANAGED_GUIDE_METHOD_ORDER: GuideMethodKey[] = [
+  "deployer",
+  "sourceFork",
+  "docker",
+  "restart",
+];
 
 const GUIDE_METHOD_ORDER: GuideMethodKey[] = [
   "ui",
@@ -82,6 +106,10 @@ const GUIDE_METHOD_ORDER: GuideMethodKey[] = [
 
 function codeFor(key: GuideMethodKey): string | null {
   switch (key) {
+    case "deployer":
+      return UPGRADE_GUIDE_CODE.deployer;
+    case "sourceFork":
+      return UPGRADE_GUIDE_CODE.sourceFork;
     case "installer":
       return [
         `# macOS / Linux`,
@@ -105,8 +133,9 @@ function codeFor(key: GuideMethodKey): string | null {
   }
 }
 
-function UpgradeGuide() {
+function UpgradeGuide({ managed }: { managed: boolean }) {
   const { t } = useTranslation();
+  const methods = managed ? MANAGED_GUIDE_METHOD_ORDER : GUIDE_METHOD_ORDER;
 
   return (
     <section
@@ -122,13 +151,15 @@ function UpgradeGuide() {
         </h3>
       </div>
       <p className={styles.panelDesc}>
-        {t("advancedSettings.update.guideIntro")}
+        {managed
+          ? t("advancedSettings.update.guideIntroManaged")
+          : t("advancedSettings.update.guideIntro")}
       </p>
       <p className={styles.guideNote}>
         {t("advancedSettings.update.guideDataNote")}
       </p>
       <div className={styles.guideMethods}>
-        {GUIDE_METHOD_ORDER.map((key) => {
+        {methods.map((key) => {
           const code = codeFor(key);
           return (
             <div key={key} className={styles.guideMethod}>
@@ -313,6 +344,9 @@ export default function UpdateConfig() {
   const upgradeFinished =
     progress && (progress.status === "complete" || progress.status === "error");
   const isServiceMode = !!status?.service_mode;
+  // Default build: upgrades are managed by the deployer (treat "not loaded
+  // yet" as managed so the upstream PyPI upgrade UI never flashes).
+  const managed = status?.managed_by_deployer !== false;
   const restartUiLocked = restartPhase !== "idle" && restartPhase !== "timeout";
 
   return (
@@ -320,7 +354,11 @@ export default function UpdateConfig() {
       <TabPanelHeader
         icon={<RefreshCw size={22} />}
         title={t("advancedSettings.update.title")}
-        description={t("advancedSettings.update.description")}
+        description={
+          managed
+            ? t("advancedSettings.update.descriptionManaged")
+            : t("advancedSettings.update.description")
+        }
       />
 
       <div className={styles.layout}>
@@ -337,25 +375,42 @@ export default function UpdateConfig() {
               {t("advancedSettings.update.panelTitle")}
             </h3>
           </div>
-          <p className={styles.panelDesc}>
-            {t("advancedSettings.update.panelDesc")}
-          </p>
-
-          <div className={styles.stableOnlyRow}>
-            <Switch
-              checked={status?.stable_only !== false}
-              onChange={(checked) => void handleStableOnlyChange(checked)}
-              disabled={savingStableOnly || checking || upgrading}
-            />
-            <div className={styles.stableOnlyCopy}>
-              <p className={styles.stableOnlyLabel}>
-                {t("advancedSettings.update.stableOnlyLabel")}
-              </p>
-              <p className={styles.stableOnlyHint}>
-                {t("advancedSettings.update.stableOnlyHint")}
-              </p>
+          {managed ? (
+            <div className={`${styles.alert} ${styles.alertInfo}`}>
+              <Info size={15} />
+              <div>
+                <p>
+                  <strong>{t("advancedSettings.update.managedTitle")}</strong>
+                </p>
+                <p>{t("advancedSettings.update.managedBody")}</p>
+                <p className={styles.manualHint}>
+                  {t("advancedSettings.update.managedEnvHint")}
+                </p>
+              </div>
             </div>
-          </div>
+          ) : (
+            <p className={styles.panelDesc}>
+              {t("advancedSettings.update.panelDesc")}
+            </p>
+          )}
+
+          {!managed && (
+            <div className={styles.stableOnlyRow}>
+              <Switch
+                checked={status?.stable_only !== false}
+                onChange={(checked) => void handleStableOnlyChange(checked)}
+                disabled={savingStableOnly || checking || upgrading}
+              />
+              <div className={styles.stableOnlyCopy}>
+                <p className={styles.stableOnlyLabel}>
+                  {t("advancedSettings.update.stableOnlyLabel")}
+                </p>
+                <p className={styles.stableOnlyHint}>
+                  {t("advancedSettings.update.stableOnlyHint")}
+                </p>
+              </div>
+            </div>
+          )}
 
           <div className={styles.versionGrid}>
             <div className={styles.versionCard}>
@@ -366,30 +421,32 @@ export default function UpdateConfig() {
                 {status?.current_version ?? "—"}
               </span>
             </div>
-            <div className={styles.versionCard}>
-              <span className={styles.versionLabel}>
-                {t("advancedSettings.update.latestVersion")}
-              </span>
-              <span className={styles.versionValue}>
-                {status?.latest_version ?? (
-                  <span className={styles.notChecked}>
-                    {t("advancedSettings.update.notChecked")}
-                  </span>
-                )}
-              </span>
-              <div className={styles.versionBadges}>
-                {status?.latest_is_prerelease && status?.latest_version && (
-                  <span className={styles.betaBadge}>
-                    {t("advancedSettings.update.prereleaseBadge")}
-                  </span>
-                )}
-                {status?.has_update && (
-                  <span className={styles.badge}>
-                    {t("advancedSettings.update.updateAvailable")}
-                  </span>
-                )}
+            {!managed && (
+              <div className={styles.versionCard}>
+                <span className={styles.versionLabel}>
+                  {t("advancedSettings.update.latestVersion")}
+                </span>
+                <span className={styles.versionValue}>
+                  {status?.latest_version ?? (
+                    <span className={styles.notChecked}>
+                      {t("advancedSettings.update.notChecked")}
+                    </span>
+                  )}
+                </span>
+                <div className={styles.versionBadges}>
+                  {status?.latest_is_prerelease && status?.latest_version && (
+                    <span className={styles.betaBadge}>
+                      {t("advancedSettings.update.prereleaseBadge")}
+                    </span>
+                  )}
+                  {status?.has_update && (
+                    <span className={styles.badge}>
+                      {t("advancedSettings.update.updateAvailable")}
+                    </span>
+                  )}
+                </div>
               </div>
-            </div>
+            )}
           </div>
 
           {status?.latest_is_prerelease && status.latest_version && (
@@ -435,20 +492,22 @@ export default function UpdateConfig() {
           )}
 
           <div className={styles.actions}>
-            <button
-              type="button"
-              className={styles.btnSecondary}
-              onClick={handleCheck}
-              disabled={checking || upgrading || restartUiLocked}
-            >
-              <RefreshCw
-                size={14}
-                className={checking ? styles.spinning : undefined}
-              />
-              {checking
-                ? t("advancedSettings.update.checking")
-                : t("advancedSettings.update.checkButton")}
-            </button>
+            {!managed && (
+              <button
+                type="button"
+                className={styles.btnSecondary}
+                onClick={handleCheck}
+                disabled={checking || upgrading || restartUiLocked}
+              >
+                <RefreshCw
+                  size={14}
+                  className={checking ? styles.spinning : undefined}
+                />
+                {checking
+                  ? t("advancedSettings.update.checking")
+                  : t("advancedSettings.update.checkButton")}
+              </button>
+            )}
 
             {isServiceMode && (
               <button
@@ -464,18 +523,21 @@ export default function UpdateConfig() {
               </button>
             )}
 
-            {status?.has_update && !status.is_editable && !upgradeFinished && (
-              <button
-                type="button"
-                className={styles.btnPrimary}
-                onClick={handleUpgrade}
-                disabled={upgrading}
-              >
-                {upgrading
-                  ? t("advancedSettings.update.upgrading")
-                  : t("advancedSettings.update.upgradeButton")}
-              </button>
-            )}
+            {!managed &&
+              status?.has_update &&
+              !status.is_editable &&
+              !upgradeFinished && (
+                <button
+                  type="button"
+                  className={styles.btnPrimary}
+                  onClick={handleUpgrade}
+                  disabled={upgrading}
+                >
+                  {upgrading
+                    ? t("advancedSettings.update.upgrading")
+                    : t("advancedSettings.update.upgradeButton")}
+                </button>
+              )}
           </div>
 
           {progress && (
@@ -585,7 +647,7 @@ export default function UpdateConfig() {
           )}
         </section>
 
-        <UpgradeGuide />
+        <UpgradeGuide managed={managed} />
       </div>
     </div>
   );

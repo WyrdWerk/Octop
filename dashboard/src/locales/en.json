@@ -3554,8 +3554,21 @@
         "restart": {
           "title": "Restart after upgrade",
           "body": "The new package only takes effect after the process restarts. Use the command that matches how you launched Octop:"
+        },
+        "deployer": {
+          "title": "Managed deployments",
+          "body": "If someone else runs this instance for you, they roll out new versions. Report problems or request updates on GitHub:"
+        },
+        "sourceFork": {
+          "title": "From source (this fork)",
+          "body": "Clone or pull github.com/WyrdWerk/Octop, build the dashboard, then reinstall:"
         }
-      }
+      },
+      "managedTitle": "Updates are managed by your deployer",
+      "managedBody": "This Octop build is maintained at github.com/WyrdWerk/Octop. In-place upgrades from PyPI are turned off because they would replace it with the upstream package. Ask whoever deployed this instance to roll out new versions, or rebuild from source or Docker using the guide.",
+      "managedEnvHint": "Operators can re-enable in-place upgrades with OCTOP_DISABLE_SELF_UPDATE=0.",
+      "descriptionManaged": "See the running version and how this deployment is updated.",
+      "guideIntroManaged": "Pick the method that matches how this instance was deployed. Restart after upgrading; data stays in ~/.octop (or OCTOP_HOME)."
     }
   },
   "agentConfig": {

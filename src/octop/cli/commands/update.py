@@ -5,6 +5,7 @@ from __future__ import annotations
 import click
 
 from octop.infra.setup.self_update import (
+    SELF_UPDATE_MANAGED_MESSAGE,
     fetch_pypi_info,
     get_editable_path,
     get_local_version,
@@ -12,6 +13,7 @@ from octop.infra.setup.self_update import (
     is_prerelease,
     resolve_venv_python,
     run_upgrade,
+    self_update_disabled,
 )
 
 
@@ -29,6 +31,10 @@ from octop.infra.setup.self_update import (
 def update(check: bool, yes: bool, verbose: bool, allow_prerelease: bool) -> None:
     """Check for and install a newer Octop release."""
     current = get_local_version()
+    if self_update_disabled():
+        click.echo(f"installed: {current}")
+        click.echo(SELF_UPDATE_MANAGED_MESSAGE, err=True)
+        raise SystemExit(0 if check else 1)
     info = fetch_pypi_info()
     click.echo(f"installed: {current}")
     if info is None:

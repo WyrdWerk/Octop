@@ -24,6 +24,7 @@ from octop.api.routers.update_store import (
 from octop.infra.errors import ErrorCode, OctopError
 from octop.infra.server import OctopServer
 from octop.infra.setup.self_update import (
+    SELF_UPDATE_MANAGED_MESSAGE,
     UpgradeResult,
     fetch_pypi_info,
     get_editable_path,
@@ -33,6 +34,7 @@ from octop.infra.setup.self_update import (
     is_prerelease,
     parse_changelog_for_version,
     run_upgrade,
+    self_update_disabled,
 )
 from octop.infra.setup.service import (
     ServiceRuntime,
@@ -121,6 +123,29 @@ def _present_status(
         "release_notes": notes,
         "stable_only": stable_only,
         "latest_is_prerelease": bool(latest and is_prerelease(latest)),
+        "managed_by_deployer": False,
+        "managed_message": None,
+    }
+
+
+def _managed_status(*, stable_only: bool) -> dict[str, Any]:
+    """Status when self-update is disabled: no PyPI probe, no upgrade offer."""
+    return {
+        "current_version": get_local_version(),
+        "latest_version": None,
+        "has_update": False,
+        "is_editable": get_editable_path() is not None,
+        "service_mode": detect_service_mode(),
+        "desktop": _is_desktop_process(),
+        "error": None,
+        "error_code": None,
+        "source": None,
+        "last_check_time": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        "release_notes": None,
+        "stable_only": stable_only,
+        "latest_is_prerelease": False,
+        "managed_by_deployer": True,
+        "managed_message": SELF_UPDATE_MANAGED_MESSAGE,
     }
 
 
@@ -191,6 +216,8 @@ async def update_status(
 ) -> dict[str, Any]:
     """Return last check result; re-probe PyPI when the server cache TTL expires."""
     stable_only = _read_stable_only(server)
+    if self_update_disabled():
+        return _managed_status(stable_only=stable_only)
     cached = get_cached_status()
     if cached is not None:
         return _auto_status(cached, stable_only=stable_only)
@@ -207,6 +234,8 @@ async def check_for_updates(
     server: Any = Depends(get_server),
 ) -> dict[str, Any]:
     stable_only = _read_stable_only(server)
+    if self_update_disabled():
+        return _managed_status(stable_only=stable_only)
     pypi_info = await asyncio.to_thread(fetch_pypi_info)
     if pypi_info is None:
         return await asyncio.to_thread(
@@ -236,6 +265,8 @@ async def update_settings(
 ) -> dict[str, Any]:
     """Persist whether automatic checks should ignore pre-release versions."""
     server.services.settings_repo.set(_STABLE_ONLY_KEY, "true" if body.stable_only else "false")
+    if self_update_disabled():
+        return _managed_status(stable_only=body.stable_only)
     cached = get_cached_status()
     if cached is None:
         return await asyncio.to_thread(
@@ -319,6 +350,8 @@ async def trigger_upgrade(
     server: Any = Depends(get_server),
     _: Any = Depends(require_permission("update")),
 ) -> dict[str, Any]:
+    if self_update_disabled():
+        raise OctopError(ErrorCode.FORBIDDEN, SELF_UPDATE_MANAGED_MESSAGE)
     if get_editable_path() is not None:
         raise OctopError(
             ErrorCode.FORBIDDEN,
