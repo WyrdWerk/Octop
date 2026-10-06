@@ -17,7 +17,7 @@ export default function LanguageSwitcher() {
   const changeLanguage = async (lang: string) => {
     try {
       const prefs = await preferencesApi.setLocale(lang);
-      await applyUserLocale(prefs.locale);
+      await applyUserLocale(prefs.locale, { explicit: true });
     } catch {
       message.error(
         t("language.saveFailed", "Failed to save language preference"),
