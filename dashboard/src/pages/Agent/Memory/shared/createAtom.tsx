@@ -13,20 +13,20 @@ import {
   type EntityItem,
 } from "../../../../api/modules/memoryDashboard";
 
-const KIND_OPTIONS: { value: AtomKind; label: string }[] = [
-  { value: "Fact", label: "事实" },
-  { value: "Preference", label: "偏好" },
-  { value: "Decision", label: "决定" },
-  { value: "Task", label: "任务" },
+const KIND_OPTIONS: { value: AtomKind; labelKey: string; label: string }[] = [
+  { value: "Fact", labelKey: "memory.kind.fact", label: "事实" },
+  { value: "Preference", labelKey: "memory.kind.preference", label: "偏好" },
+  { value: "Decision", labelKey: "memory.kind.decision", label: "决定" },
+  { value: "Task", labelKey: "memory.kind.task", label: "任务" },
 ];
 
 const ENTITY_TYPE_OPTIONS = [
-  { value: "Fact", label: "事实" },
-  { value: "Person", label: "人物" },
-  { value: "User", label: "用户" },
-  { value: "Project", label: "项目" },
-  { value: "Decision", label: "决定" },
-  { value: "Task", label: "任务" },
+  { value: "Fact", labelKey: "memory.kind.fact", label: "事实" },
+  { value: "Person", labelKey: "memory.entityType.person", label: "人物" },
+  { value: "User", labelKey: "memory.entityType.user", label: "用户" },
+  { value: "Project", labelKey: "memory.entityType.project", label: "项目" },
+  { value: "Decision", labelKey: "memory.kind.decision", label: "决定" },
+  { value: "Task", labelKey: "memory.kind.task", label: "任务" },
 ];
 
 interface Props {
@@ -185,13 +185,23 @@ export default function CreateAtomModal({
               name="entity_type"
               label={t("memory.create.topicType", "主题类型")}
             >
-              <Select options={ENTITY_TYPE_OPTIONS} />
+              <Select
+                options={ENTITY_TYPE_OPTIONS.map((o) => ({
+                  value: o.value,
+                  label: t(o.labelKey, o.label),
+                }))}
+              />
             </Form.Item>
           </>
         )}
 
         <Form.Item name="kind" label={t("memory.create.kind", "记忆类型")}>
-          <Select options={KIND_OPTIONS} />
+          <Select
+            options={KIND_OPTIONS.map((o) => ({
+              value: o.value,
+              label: t(o.labelKey, o.label),
+            }))}
+          />
         </Form.Item>
         <Form.Item
           name="assertion"

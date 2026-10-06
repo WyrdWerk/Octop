@@ -366,7 +366,7 @@ export const CHANNEL_FIELDS: Partial<Record<ChannelKey, ChannelField[]>> = {
     },
   ],
   weixin: [
-    { name: "bot_uin", label: "机器人 UIN", required: true },
+    { name: "bot_uin", label: "channels.fieldBotUin", required: true },
     { name: "token", label: "Token", type: "password", required: true },
     { name: "base_url", label: "Base URL" },
   ],
@@ -379,7 +379,7 @@ export const CHANNEL_FIELDS: Partial<Record<ChannelKey, ChannelField[]>> = {
     { name: "sk", label: "Secret Key (SK)", type: "password", required: true },
     { name: "agent_id", label: "Agent ID", required: true },
     { name: "ws_url", label: "WebSocket URL" },
-    { name: "ws_url_backup", label: "备用 WebSocket URL" },
+    { name: "ws_url_backup", label: "channels.fieldWsUrlBackup" },
   ],
   mqtt: [
     { name: "host", label: "Broker Host", required: true },

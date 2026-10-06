@@ -9,6 +9,8 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Card, Empty, Pagination, Select, Skeleton, Space, Tag } from "antd";
 import { ChevronDown, ChevronRight } from "lucide-react";
+import { useTranslation } from "react-i18next";
+import type { TFunction } from "i18next";
 
 import {
   memoryDashboardApi,
@@ -26,14 +28,26 @@ import {
 const PAGE_SIZE = 30;
 
 const ACTION_OPTIONS = [
-  { value: "", label: "全部记录" },
-  { value: "extract_run", label: "提取运行" },
-  { value: "promote", label: "采纳" },
-  { value: "reject", label: "忽略" },
-  { value: "deprecate", label: "弃用" },
-  { value: "create", label: "新建" },
-  { value: "user_edit", label: "编辑" },
-  { value: "page_regen", label: "刷新主题" },
+  { value: "", labelKey: "memory.journal.filter.all", label: "全部记录" },
+  {
+    value: "extract_run",
+    labelKey: "memory.journal.filter.extractRun",
+    label: "提取运行",
+  },
+  { value: "promote", labelKey: "memory.journal.filter.promote", label: "采纳" },
+  { value: "reject", labelKey: "memory.journal.filter.reject", label: "忽略" },
+  {
+    value: "deprecate",
+    labelKey: "memory.journal.filter.deprecate",
+    label: "弃用",
+  },
+  { value: "create", labelKey: "memory.journal.filter.create", label: "新建" },
+  { value: "user_edit", labelKey: "memory.journal.filter.edit", label: "编辑" },
+  {
+    value: "page_regen",
+    labelKey: "memory.journal.filter.pageRegen",
+    label: "刷新主题",
+  },
 ];
 
 const ACTION_COLOR: Record<string, string> = {
@@ -74,6 +88,7 @@ interface Props {
 }
 
 export default function JournalList({ agentId }: Props) {
+  const { t } = useTranslation();
   const timeZone = useServerTimezone();
   const [items, setItems] = useState<JournalItem[]>([]);
   const [total, setTotal] = useState(0);
@@ -103,12 +118,17 @@ export default function JournalList({ agentId }: Props) {
     void load();
   }, [agentId, load]);
 
-  const days = useMemo(() => buildDays(items, timeZone), [items, timeZone]);
+  const days = useMemo(
+    () => buildDays(items, timeZone, t),
+    [items, timeZone, t],
+  );
 
   return (
     <Card size="small">
       <Space style={{ marginBottom: 16 }} wrap>
-        <span style={{ color: "#595959" }}>筛选类型:</span>
+        <span style={{ color: "#595959" }}>
+          {t("memory.journal.filterLabel", "筛选类型")}:
+        </span>
         <Select
           style={{ width: 180 }}
           value={action}
@@ -116,7 +136,10 @@ export default function JournalList({ agentId }: Props) {
             setAction(v);
             setPage(1);
           }}
-          options={ACTION_OPTIONS}
+          options={ACTION_OPTIONS.map((o) => ({
+            value: o.value,
+            label: t(o.labelKey, o.label),
+          }))}
         />
       </Space>
 
@@ -125,7 +148,7 @@ export default function JournalList({ agentId }: Props) {
       ) : items.length === 0 ? (
         <Empty
           image={Empty.PRESENTED_IMAGE_SIMPLE}
-          description="暂无整理记录"
+          description={t("memory.journal.empty", "暂无整理记录")}
         />
       ) : (
         <div>
@@ -185,6 +208,7 @@ function DaySection({
   expanded: Record<string, boolean>;
   onToggle: (key: string) => void;
 }) {
+  const { t } = useTranslation();
   return (
     <div style={{ marginBottom: 20 }}>
       <div
@@ -198,7 +222,10 @@ function DaySection({
       >
         {day.label}
         <span style={{ marginLeft: 8, fontWeight: 400 }}>
-          · {day.groups.length} 项
+          ·{" "}
+          {t("memory.journal.itemCount", "{{n}} 项", {
+            n: day.groups.length,
+          })}
         </span>
       </div>
       <div style={{ position: "relative", paddingLeft: 16 }}>
@@ -264,7 +291,8 @@ function PipelineStoryRow({
   isExpanded: boolean;
   onToggle: () => void;
 }) {
-  const summary = pipelineSummary(group.items);
+  const { t } = useTranslation();
+  const summary = pipelineSummary(group.items, t);
   const dotColor = ACTION_HEX["capture"];
   return (
     <div style={{ marginBottom: 10 }}>
@@ -315,9 +343,9 @@ function PipelineStoryRow({
         <div style={{ flex: 1, minWidth: 0, fontSize: 13 }}>
           <Space size={6} wrap>
             <span style={{ color: "#262626" }}>📥 {summary.title}</span>
-            {summary.tags.map((t, idx) => (
-              <Tag key={idx} color={t.color} style={{ margin: 0 }}>
-                {t.text}
+            {summary.tags.map((tag, idx) => (
+              <Tag key={idx} color={tag.color} style={{ margin: 0 }}>
+                {tag.text}
               </Tag>
             ))}
           </Space>
@@ -352,11 +380,12 @@ function SingleEventRow({
   item: JournalItem;
   timeZone: string;
 }) {
+  const { t } = useTranslation();
   const dotColor = ACTION_HEX[item.action] ?? "#bfbfbf";
   const story = singleEventStory(item);
   const isRun = item.action === "extract_run";
-  const runText = isRun ? extractRunSummary(item.after) : "";
-  const detailText = isRun ? "" : noteToChinese(item.note);
+  const runText = isRun ? extractRunSummary(item.after, t) : "";
+  const detailText = isRun ? "" : noteToChinese(item.note, t);
   return (
     <div style={{ marginBottom: 10, display: "flex", gap: 12 }}>
       <span
@@ -391,10 +420,10 @@ function SingleEventRow({
             color={ACTION_COLOR[item.action] ?? "default"}
             style={{ margin: 0 }}
           >
-            {actionLabel(item.action)}
+            {actionLabel(item.action, t)}
           </Tag>
           <span style={{ color: "#595959" }}>
-            {isRun ? runText : targetText(item)}
+            {isRun ? runText : targetText(item, t)}
           </span>
         </Space>
         {detailText ? (
@@ -415,24 +444,40 @@ function SingleEventRow({
 }
 
 /** Human summary for an ``extract_run`` row, built from its structured stats. */
-function extractRunSummary(after: ExtractRunStats | null | undefined): string {
+function extractRunSummary(
+  after: ExtractRunStats | null | undefined,
+  t: TFunction,
+): string {
   const s = after ?? {};
   if (s.failure_reason) {
     if (/no llm|not configured|no model/i.test(s.failure_reason)) {
-      return "未配置提取模型，本次未运行";
+      return t(
+        "memory.journal.run.noModel",
+        "未配置提取模型，本次未运行",
+      );
     }
-    return "本次提取失败";
+    return t("memory.journal.run.failed", "本次提取失败");
   }
   const extracted = s.events_extracted ?? 0;
   if (extracted === 0) {
-    return `扫描 ${s.events_considered ?? 0} 段对话，无新增内容`;
+    return t("memory.journal.run.nothingNew", "扫描 {{n}} 段对话，无新增内容", {
+      n: s.events_considered ?? 0,
+    });
   }
   const promoted = s.promoted ?? 0;
   const candidates = s.candidates ?? 0;
   if (candidates === 0) {
-    return `处理 ${extracted} 段对话，未发现可记忆的内容`;
+    return t(
+      "memory.journal.run.nothingMemorable",
+      "处理 {{n}} 段对话，未发现可记忆的内容",
+      { n: extracted },
+    );
   }
-  return `处理 ${extracted} 段对话，生成 ${candidates} 条草稿，晋升 ${promoted} 条记忆`;
+  return t(
+    "memory.journal.run.summary",
+    "处理 {{n}} 段对话，生成 {{candidates}} 条草稿，晋升 {{promoted}} 条记忆",
+    { n: extracted, candidates, promoted },
+  );
 }
 
 /** Child row for each pipeline detail in the expanded state. */
@@ -443,6 +488,8 @@ function DetailLine({
   item: JournalItem;
   timeZone: string;
 }) {
+  const { t } = useTranslation();
+  const note = noteToChinese(item.note, t);
   return (
     <div
       style={{
@@ -461,14 +508,12 @@ function DetailLine({
         color={ACTION_COLOR[item.action] ?? "default"}
         style={{ margin: 0, fontSize: 11 }}
       >
-        {actionLabel(item.action)}
+        {actionLabel(item.action, t)}
       </Tag>
-      {targetText(item) ? (
-        <span style={{ color: "#8c8c8c" }}>{targetText(item)}</span>
+      {targetText(item, t) ? (
+        <span style={{ color: "#8c8c8c" }}>{targetText(item, t)}</span>
       ) : null}
-      {noteToChinese(item.note) ? (
-        <span style={{ color: "#bfbfbf" }}>— {noteToChinese(item.note)}</span>
-      ) : null}
+      {note ? <span style={{ color: "#bfbfbf" }}>— {note}</span> : null}
     </div>
   );
 }
@@ -477,15 +522,20 @@ function DetailLine({
 // Data shaping: flat items -> DayBucket[Group[]].
 // ---------------------------------------------------------------------------
 
-function buildDays(items: JournalItem[], timeZone: string): DayBucket[] {
+function buildDays(
+  items: JournalItem[],
+  timeZone: string,
+  t: TFunction,
+): DayBucket[] {
   const groups = aggregate(items);
   const out: DayBucket[] = [];
   for (const g of groups) {
     const diffDays = calendarDaysAgo(g.timestamp, timeZone);
     let label: string;
-    if (diffDays === 0) label = "今天";
-    else if (diffDays === 1) label = "昨天";
-    else if (diffDays > 1 && diffDays < 7) label = `${diffDays} 天前`;
+    if (diffDays === 0) label = t("memory.time.today", "今天");
+    else if (diffDays === 1) label = t("memory.time.yesterday", "昨天");
+    else if (diffDays > 1 && diffDays < 7)
+      label = t("memory.time.daysAgo", "{{n}} 天前", { n: diffDays });
     else label = formatServerYmd(g.timestamp, timeZone);
 
     const last = out[out.length - 1];
@@ -561,7 +611,7 @@ interface PipelineSummary {
   tags: { text: string; color: string }[];
 }
 
-function pipelineSummary(items: JournalItem[]): PipelineSummary {
+function pipelineSummary(items: JournalItem[], t: TFunction): PipelineSummary {
   let captureN = 0;
   let extractN = 0;
   let regenN = 0;
@@ -570,25 +620,54 @@ function pipelineSummary(items: JournalItem[]): PipelineSummary {
     else if (it.action === "extract") extractN++;
     else if (it.action === "page_regen") regenN++;
   }
-  let title = "整理了一段对话";
+  let title = t("memory.journal.story.default", "整理了一段对话");
   if (captureN > 0 && extractN === 0 && regenN === 0) {
-    title = `记录了 ${captureN} 段对话`;
+    title = t("memory.journal.story.captured", "记录了 {{capture}} 段对话", {
+      capture: captureN,
+    });
   } else if (captureN > 0 && extractN > 0 && regenN === 0) {
-    title = `处理了 ${captureN} 段对话，生成 ${extractN} 条记忆草稿`;
+    title = t(
+      "memory.journal.story.capturedExtracted",
+      "处理了 {{capture}} 段对话，生成 {{extract}} 条记忆草稿",
+      { capture: captureN, extract: extractN },
+    );
   } else if (captureN === 0 && extractN > 0 && regenN === 0) {
-    title = `生成了 ${extractN} 条记忆草稿`;
+    title = t("memory.journal.story.extracted", "生成了 {{extract}} 条记忆草稿", {
+      extract: extractN,
+    });
   } else if (regenN > 0 && extractN === 0 && captureN === 0) {
-    title = `刷新了 ${regenN} 个主题摘要`;
+    title = t("memory.journal.story.regen", "刷新了 {{regen}} 个主题摘要", {
+      regen: regenN,
+    });
   } else if (captureN > 0 && regenN > 0) {
-    title = `处理了 ${captureN} 段对话，并刷新了 ${regenN} 个主题摘要`;
+    title = t(
+      "memory.journal.story.capturedRegen",
+      "处理了 {{capture}} 段对话，并刷新了 {{regen}} 个主题摘要",
+      { capture: captureN, regen: regenN },
+    );
   } else if (extractN > 0 && regenN > 0) {
-    title = `生成了 ${extractN} 条记忆草稿，并刷新了 ${regenN} 个主题摘要`;
+    title = t(
+      "memory.journal.story.extractedRegen",
+      "生成了 {{extract}} 条记忆草稿，并刷新了 {{regen}} 个主题摘要",
+      { extract: extractN, regen: regenN },
+    );
   }
   const tags: { text: string; color: string }[] = [];
   if (captureN > 0)
-    tags.push({ text: `📥 ${captureN} 段对话`, color: "default" });
-  if (extractN > 0) tags.push({ text: `📝 ${extractN} 条草稿`, color: "blue" });
-  if (regenN > 0) tags.push({ text: `🔄 ${regenN} 次刷新`, color: "geekblue" });
+    tags.push({
+      text: t("memory.journal.tag.capture", "📥 {{n}} 段对话", { n: captureN }),
+      color: "default",
+    });
+  if (extractN > 0)
+    tags.push({
+      text: t("memory.journal.tag.extract", "📝 {{n}} 条草稿", { n: extractN }),
+      color: "blue",
+    });
+  if (regenN > 0)
+    tags.push({
+      text: t("memory.journal.tag.regen", "🔄 {{n}} 次刷新", { n: regenN }),
+      color: "geekblue",
+    });
   return { title, tags };
 }
 
@@ -614,38 +693,42 @@ function singleEventStory(item: JournalItem): { icon: string } {
   }
 }
 
-function targetText(j: JournalItem): string {
+function targetText(j: JournalItem, t: TFunction): string {
   // Backend-enriched target text lets us show the specific acted-on item; otherwise fall back to type.
-  if (j.target_summary) return `「${j.target_summary}」`;
-  if (j.target_atom_id) return "一条记忆";
-  if (j.target_entity_id) return "一个主题";
-  if (j.target_candidate_id) return "一条草稿";
+  if (j.target_summary)
+    return t("memory.journal.target.quoted", "「{{text}}」", {
+      text: j.target_summary,
+    });
+  if (j.target_atom_id) return t("memory.journal.target.atom", "一条记忆");
+  if (j.target_entity_id) return t("memory.journal.target.entity", "一个主题");
+  if (j.target_candidate_id)
+    return t("memory.journal.target.candidate", "一条草稿");
   return "";
 }
 
-function actionLabel(action: string): string {
+function actionLabel(action: string, t: TFunction): string {
   switch (action) {
     case "extract_run":
-      return "提取运行";
+      return t("memory.journal.label.extractRun", "提取运行");
     case "capture":
-      return "记录对话";
+      return t("memory.journal.label.capture", "记录对话");
     case "extract":
-      return "生成草稿";
+      return t("memory.journal.label.extract", "生成草稿");
     case "promote":
-      return "采纳";
+      return t("memory.journal.label.promote", "采纳");
     case "reject":
-      return "忽略";
+      return t("memory.journal.label.reject", "忽略");
     case "deprecate":
-      return "弃用";
+      return t("memory.journal.label.deprecate", "弃用");
     case "page_regen":
-      return "刷新主题";
+      return t("memory.journal.label.pageRegen", "刷新主题");
     case "create":
-      return "创建";
+      return t("memory.journal.label.create", "创建");
     case "update":
     case "user_edit":
-      return "更新";
+      return t("memory.journal.label.update", "更新");
     case "merge":
-      return "合并";
+      return t("memory.journal.label.merge", "合并");
     default:
       return action;
   }
@@ -656,21 +739,30 @@ function actionLabel(action: string): string {
  * Known English patterns are translated, user-provided Chinese reasons are
  * preserved, and other dev logs return null to avoid mixed-language noise.
  */
-function noteToChinese(note: string | null | undefined): string | null {
+function noteToChinese(
+  note: string | null | undefined,
+  t: TFunction,
+): string | null {
   const s = (note ?? "").trim();
   if (!s) return null;
 
   // Entity resolution during promotion: linked existing topic or created new topic.
   let m = /^entity resolved via alias ['"](.+)['"]$/i.exec(s);
-  if (m) return `关联到已有主题「${m[1]}」`;
+  if (m)
+    return t("memory.journal.note.linkedTopic", "关联到已有主题「{{name}}」", {
+      name: m[1],
+    });
   m = /^no existing entity matched ['"](.+)['"];?\s*will create$/i.exec(s);
-  if (m) return `新建主题「${m[1]}」`;
+  if (m)
+    return t("memory.journal.note.newTopic", "新建主题「{{name}}」", {
+      name: m[1],
+    });
 
   // Deprecation-related notes.
   if (/^atom deprecated without replacement/i.test(s))
-    return "弃用（无替代记忆）";
+    return t("memory.journal.note.deprecatedNoReplacement", "弃用（无替代记忆）");
   m = /^semantic duplicate; superseded by /i.exec(s);
-  if (m) return "语义重复，已被合并";
+  if (m) return t("memory.journal.note.semanticDuplicate", "语义重复，已被合并");
 
   // Preserve user-provided Chinese reasons.
   if (/[一-鿿]/.test(s)) return s;

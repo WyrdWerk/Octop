@@ -1868,7 +1868,7 @@ export function ChannelDrawer({
                   disabled={isEdit}
                   options={CHANNEL_KEYS.map((k) => ({
                     value: k,
-                    label: CHANNEL_LABELS[k],
+                    label: t(CHANNEL_LABEL_KEYS[k], CHANNEL_LABELS[k]),
                   }))}
                 />
               </Form.Item>

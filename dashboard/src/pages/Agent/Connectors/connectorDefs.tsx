@@ -7,24 +7,28 @@ import styles from "./index.module.less";
 export const MAIL_PROVIDERS = [
   {
     id: "qq",
+    labelKey: "connectors.mailProviderQq",
     label: "QQ 邮箱",
     guideUrl: "https://mail.qq.com/",
     emailPlaceholder: "you@qq.com",
   },
   {
     id: "netease",
+    labelKey: "connectors.mailProviderNetease",
     label: "网易邮箱",
     guideUrl: "https://mail.163.com/",
     emailPlaceholder: "you@163.com / you@126.com",
   },
   {
     id: "gmail",
+    labelKey: "connectors.mailProviderGmail",
     label: "Gmail",
     guideUrl: "https://mail.google.com/",
     emailPlaceholder: "you@gmail.com",
   },
   {
     id: "custom",
+    labelKey: "connectors.mailProviderCustom",
     label: "其他",
     guideUrl: null,
     emailPlaceholder: "you@example.com",

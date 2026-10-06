@@ -2058,7 +2058,7 @@ function ConnectorConfigDrawer({
                 <Select
                   options={MAIL_PROVIDERS.map((item) => ({
                     value: item.id,
-                    label: item.label,
+                    label: t(item.labelKey, item.label),
                   }))}
                 />
               </Form.Item>
@@ -2125,7 +2125,12 @@ function ConnectorConfigDrawer({
                 label="AppId"
                 rules={[{ required: true }]}
               >
-                <Input placeholder="企业 ID / AppId" />
+                <Input
+                  placeholder={t(
+                    "connectors.appIdPlaceholder",
+                    "企业 ID / AppId",
+                  )}
+                />
               </Form.Item>
               <Form.Item
                 name="sdk_id"

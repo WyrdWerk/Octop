@@ -2558,7 +2558,9 @@
     "discordInvalidIds": "Enter numeric IDs separated by commas or newlines.",
     "discordAllowAllChannels": "Allow all accessible channels",
     "discordAllowAllChannelsHelp": "On by default; no channel IDs needed. Turn off to restrict access to the channels listed below. Mention the bot to get a reply.",
-    "discordSetupHelp": "Enable Message Content Intent on the Discord Bot page and invite the bot to your server. All server text channels the bot can access are allowed by default; mention the bot to get a reply. DMs only accept the user IDs listed below; leave empty to disable DMs."
+    "discordSetupHelp": "Enable Message Content Intent on the Discord Bot page and invite the bot to your server. All server text channels the bot can access are allowed by default; mention the bot to get a reply. DMs only accept the user IDs listed below; leave empty to disable DMs.",
+    "fieldBotUin": "Bot UIN",
+    "fieldWsUrlBackup": "Backup WebSocket URL"
   },
   "tokenUsage": {
     "title": "Token Usage Analytics",
@@ -4120,7 +4122,18 @@
       "viewSummaryTip": "View this topic's summary",
       "deprecateTooltip": "Deprecate this memory",
       "deprecate": "Deprecate this memory",
-      "actions": "Actions"
+      "actions": "Actions",
+      "aliasesParen": "(also called {{aliases}})",
+      "aliases": "Also called {{aliases}}",
+      "aliasSep": ", ",
+      "dirty": "Needs refresh",
+      "loading": "Loading...",
+      "noAtoms": "(No memories under this topic yet)",
+      "summaryLoadFailed": "Failed to load the summary. Please try again later.",
+      "summaryNotGenerated": "This topic's summary hasn't been generated yet.",
+      "summaryNotGeneratedHint": "After a topic is created or its memories change, the system writes a long-form summary in the background. Check back later.",
+      "summaryMeta": "Version v{{version}} · updated {{time}}",
+      "summaryDirtySuffix": " · Memories have changed; this summary will be refreshed in the background shortly"
     },
     "create": {
       "title": "New memory",
@@ -4184,7 +4197,42 @@
       "rejectOk": "Discarded",
       "rejectReasonPlaceholder": "Optional reason, e.g. expired / inaccurate / not important",
       "rejectTitle": "Discard this draft",
-      "statusLabel": "Status"
+      "statusLabel": "Status",
+      "status": {
+        "pending": "Pending",
+        "needsReview": "Needs review",
+        "conflict": "Possible conflict",
+        "promoted": "Adopted",
+        "rejected": "Discarded",
+        "all": "All"
+      },
+      "promoteMerged": "merged into {{n}} existing memories",
+      "promoteNeedsReview": "{{n}} need review",
+      "promoteAdded": "{{n}} newly adopted",
+      "actionFailed": "Operation failed",
+      "draftContent": "Draft content",
+      "quote": "Source quote",
+      "suggestion": "Octop's suggestion",
+      "subject": "About whom / what",
+      "guide": {
+        "pendingTitle": "About \"Pending\" drafts",
+        "pending1": "Octop extracted these drafts from your conversations automatically; they are waiting for the system rules to evaluate them.",
+        "pending2": "The system decides automatically whether to adopt them, merge them into existing memories, flag them for review, or drop them — ",
+        "pending2Strong": "no manual action needed",
+        "period": ".",
+        "pending3": "To handle drafts earlier, switch to \"Needs review\" or \"Possible conflict\" to see the ones that need your decision.",
+        "needsReviewTitle": "About \"Needs review\" drafts",
+        "reviewPromote": " → goes into long-term memory immediately and is prioritized in the next conversation.",
+        "reviewReject": " → never enters long-term memory. You can add a reason (kept in the activity log for later review).",
+        "reviewTimeoutStrong": "⏰ If not handled within 7 days",
+        "reviewTimeout": ", the system adds it to long-term memory automatically, but with low confidence and lower ranking, so it won't affect main conversations.",
+        "conflictTitle": "About \"Possible conflict\" drafts",
+        "conflict1": "These drafts contradict existing long-term memories. The system can't decide automatically, so you need to choose which one is accurate.",
+        "conflictPromote": " → this draft wins and goes into long-term memory.",
+        "conflictReject": " → the existing memory stays unchanged.",
+        "conflictNoTimeoutStrong": "⚠️ Conflict drafts never time out",
+        "conflictNoTimeout": " — if you don't handle them, they stay in this queue."
+      }
     },
     "journal": {
       "action": {
@@ -4194,6 +4242,64 @@
         "deprecate": "Deprecate",
         "reject": "Discard",
         "merge": "Merge"
+      },
+      "filter": {
+        "all": "All activity",
+        "extractRun": "Extraction runs",
+        "promote": "Adopted",
+        "reject": "Discarded",
+        "deprecate": "Deprecated",
+        "create": "Created",
+        "edit": "Edited",
+        "pageRegen": "Topic refreshes"
+      },
+      "filterLabel": "Filter by type",
+      "empty": "No activity yet",
+      "itemCount": "{{n}} items",
+      "run": {
+        "noModel": "No extraction model configured; this run was skipped",
+        "failed": "This extraction run failed",
+        "nothingNew": "Scanned {{n}} conversation segments, nothing new",
+        "nothingMemorable": "Processed {{n}} conversation segments, nothing worth remembering found",
+        "summary": "Processed {{n}} conversation segments, generated {{candidates}} drafts, promoted {{promoted}} memories"
+      },
+      "story": {
+        "default": "Organized a conversation",
+        "captured": "Recorded {{capture}} conversation segments",
+        "capturedExtracted": "Processed {{capture}} conversation segments and generated {{extract}} memory drafts",
+        "extracted": "Generated {{extract}} memory drafts",
+        "regen": "Refreshed {{regen}} topic summaries",
+        "capturedRegen": "Processed {{capture}} conversation segments and refreshed {{regen}} topic summaries",
+        "extractedRegen": "Generated {{extract}} memory drafts and refreshed {{regen}} topic summaries"
+      },
+      "tag": {
+        "capture": "📥 {{n}} conversations",
+        "extract": "📝 {{n}} drafts",
+        "regen": "🔄 {{n}} refreshes"
+      },
+      "target": {
+        "quoted": "\"{{text}}\"",
+        "atom": "a memory",
+        "entity": "a topic",
+        "candidate": "a draft"
+      },
+      "label": {
+        "extractRun": "Extraction run",
+        "capture": "Recorded conversation",
+        "extract": "Generated drafts",
+        "promote": "Adopted",
+        "reject": "Discarded",
+        "deprecate": "Deprecated",
+        "pageRegen": "Refreshed topic",
+        "create": "Created",
+        "update": "Updated",
+        "merge": "Merged"
+      },
+      "note": {
+        "linkedTopic": "Linked to existing topic \"{{name}}\"",
+        "newTopic": "Created new topic \"{{name}}\"",
+        "deprecatedNoReplacement": "Deprecated (no replacement memory)",
+        "semanticDuplicate": "Semantic duplicate, merged"
       }
     },
     "confidence": {
@@ -4209,7 +4315,8 @@
       "person": "Person",
       "place": "Place",
       "project": "Project",
-      "tool": "Tool"
+      "tool": "Tool",
+      "user": "User"
     },
     "episodes": {
       "disclaimer": "This diary keeps the emotions and little stories from your time with Octop. It is not quoted in regular chats — it only helps Octop care for you better and feeds the weekly / monthly recaps."
@@ -4218,14 +4325,18 @@
       "high": "Very important",
       "low": "Normal",
       "medium": "Important",
-      "title": "Importance"
+      "title": "Importance",
+      "all": "All",
+      "tooltip": "Importance: {{level}}"
     },
     "kind": {
       "conflict": "Possible conflict",
       "decision": "Decision",
       "fact": "Fact",
       "preference": "Preference",
-      "task": "Task"
+      "task": "Task",
+      "all": "All types",
+      "contradiction": "Possible contradiction"
     },
     "list": {
       "importanceMin": "Importance at least",
@@ -4269,7 +4380,8 @@
       "targetHostLabel": "Target host",
       "targetNs": "Target namespace: {{ns}}",
       "willApply": "Will write: {{n}} entries",
-      "importDone": "Import finished"
+      "importDone": "Import finished",
+      "hostLocal": "octop (this host)"
     },
     "terminal": {
       "aboutMe": "About you",
@@ -4290,6 +4402,45 @@
       "daysAgo": "{{n}} days ago",
       "today": "Today",
       "yesterday": "Yesterday"
+    },
+    "confidenceLevel": {
+      "high": "Very confident",
+      "medium": "Fairly confident",
+      "low": "Not very sure"
+    },
+    "relTime": {
+      "justNow": "Just now",
+      "minutesAgo": "{{n}} min ago",
+      "hoursAgo": "{{n}} hr ago",
+      "daysAgo": "{{n}} days ago",
+      "monthsAgo": "{{n}} months ago",
+      "yearsAgo": "{{n}} years ago"
+    },
+    "atoms": {
+      "forgotten": "Forgotten",
+      "active": "Active",
+      "content": "Memory content",
+      "quote": "Source quote",
+      "confidence": "Confidence",
+      "searchTerms": "Related keywords",
+      "firstRecorded": "First recorded {{time}}",
+      "occurredSuffix": " · Occurred {{time}}",
+      "confidenceTag": "Confidence: {{level}}"
+    },
+    "episodeList": {
+      "tagIntensity": "{{emotion}} · intensity {{n}}",
+      "summary": "Summary",
+      "people": "People involved",
+      "occurredAt": "Occurred {{time}}"
+    },
+    "emotion": {
+      "happy": "Happy",
+      "sad": "Sad",
+      "angry": "Angry",
+      "surprised": "Surprised",
+      "anxious": "Anxious",
+      "calm": "Calm",
+      "uncategorized": "Uncategorized"
     }
   },
   "personalization": {
@@ -5983,7 +6134,12 @@
     "weknoraFound": "Detected local WeKnora and filled in the URL",
     "weknoraNotFound": "WeKnora not found at 127.0.0.1:8080 on the Octop host",
     "weknoraStep1": "Open WeKnora and create an API Key",
-    "weknoraStep2": "Detect the local service or enter the deployment URL manually"
+    "weknoraStep2": "Detect the local service or enter the deployment URL manually",
+    "mailProviderQq": "QQ Mail",
+    "mailProviderNetease": "NetEase Mail",
+    "mailProviderGmail": "Gmail",
+    "mailProviderCustom": "Other",
+    "appIdPlaceholder": "Enterprise ID / AppId"
   },
   "mbtiPage": {
     "pickAgent": "Select an Agent first"

@@ -2558,7 +2558,9 @@
     "discordInvalidIds": "请输入数字 ID，用逗号或换行分隔。",
     "discordAllowAllChannels": "允许所有可访问频道",
     "discordAllowAllChannelsHelp": "默认开启，无需填写频道 ID。关闭后仅响应下方指定频道；频道内仍需 @机器人。",
-    "discordSetupHelp": "在 Discord Bot 页面开启 Message Content Intent，并邀请机器人加入服务器。默认允许机器人有权限访问的所有服务器文字频道，频道内需 @机器人。私聊仅允许下方填写的用户 ID，留空则不接收私聊。"
+    "discordSetupHelp": "在 Discord Bot 页面开启 Message Content Intent，并邀请机器人加入服务器。默认允许机器人有权限访问的所有服务器文字频道，频道内需 @机器人。私聊仅允许下方填写的用户 ID，留空则不接收私聊。",
+    "fieldBotUin": "机器人 UIN",
+    "fieldWsUrlBackup": "备用 WebSocket URL"
   },
   "tokenUsage": {
     "title": "Token 消耗统计",
@@ -4059,7 +4061,9 @@
       "decision": "决定",
       "task": "任务",
       "preference": "偏好",
-      "conflict": "可能冲突"
+      "conflict": "可能冲突",
+      "all": "全部类型",
+      "contradiction": "可能矛盾"
     },
     "entityType": {
       "person": "人物",
@@ -4069,13 +4073,16 @@
       "concept": "概念",
       "organization": "组织",
       "event": "事件",
-      "other": "其它"
+      "other": "其它",
+      "user": "用户"
     },
     "importance": {
       "title": "重要程度",
       "high": "非常重要",
       "medium": "重要",
-      "low": "一般"
+      "low": "一般",
+      "all": "全部",
+      "tooltip": "重要程度：{{level}}"
     },
     "list": {
       "kind": "类型",
@@ -4090,7 +4097,18 @@
       "viewSummaryTip": "查看这个主题的摘要",
       "deprecateTooltip": "弃用这条记忆",
       "deprecate": "弃用这条记忆",
-      "actions": "操作"
+      "actions": "操作",
+      "aliasesParen": "(也叫 {{aliases}})",
+      "aliases": "也叫 {{aliases}}",
+      "aliasSep": "、",
+      "dirty": "待刷新",
+      "loading": "加载中...",
+      "noAtoms": "（该主题下暂无记忆）",
+      "summaryLoadFailed": "摘要加载失败，请稍后重试。",
+      "summaryNotGenerated": "这个主题的摘要还没有生成。",
+      "summaryNotGeneratedHint": "新建主题或有新记忆改动后，系统会在后台自动整理出一份长文摘要，稍后回来即可查看。",
+      "summaryMeta": "版本 v{{version}} · 更新于 {{time}}",
+      "summaryDirtySuffix": " · 有新记忆改动，后台稍后会自动刷新这份摘要"
     },
     "create": {
       "title": "新建记忆",
@@ -4158,7 +4176,42 @@
       "rejectTitle": "忽略这条草稿",
       "confirmReject": "确认忽略",
       "rejectHint": "忽略后这条记忆不会进入长期记忆。可选择填写原因，便于日后回顾。",
-      "rejectReasonPlaceholder": "原因可选，例如：已过期 / 记录有误 / 不重要"
+      "rejectReasonPlaceholder": "原因可选，例如：已过期 / 记录有误 / 不重要",
+      "status": {
+        "pending": "待处理",
+        "needsReview": "待复核",
+        "conflict": "可能冲突",
+        "promoted": "已采纳",
+        "rejected": "已忽略",
+        "all": "全部"
+      },
+      "promoteMerged": "与现有记忆合并 {{n}} 条",
+      "promoteNeedsReview": "需复核 {{n}} 条",
+      "promoteAdded": "新增采纳 {{n}} 条",
+      "actionFailed": "操作失败",
+      "draftContent": "草稿内容",
+      "quote": "原话依据",
+      "suggestion": "Octop 的建议",
+      "subject": "关于谁 / 什么",
+      "guide": {
+        "pendingTitle": "关于「待处理」草稿",
+        "pending1": "这些草稿由 Octop 从对话中自动提取，正在等待系统规则判断。",
+        "pending2": "系统会自动决定：直接采纳、合并到已有记忆、标记为待复核或丢弃——",
+        "pending2Strong": "无需手动干预",
+        "period": "。",
+        "pending3": "如需提前处理，可切换到「待复核」或「可能冲突」状态查看需要你决策的草稿。",
+        "needsReviewTitle": "关于「待复核」草稿",
+        "reviewPromote": " → 立即进入长期记忆，下次对话优先使用。",
+        "reviewReject": " → 不会进入长期记忆，可附上原因（保存在操作日志中，便于日后回顾）。",
+        "reviewTimeoutStrong": "⏰ 若 7 天内未处理",
+        "reviewTimeout": "，系统会自动将其加入长期记忆，但置信度较低，排序靠后，不影响主要对话。",
+        "conflictTitle": "关于「可能冲突」草稿",
+        "conflict1": "这些草稿与已有长期记忆存在矛盾，系统无法自动裁决，需要你来决定哪个是准确的。",
+        "conflictPromote": " → 以这条草稿为准，进入长期记忆。",
+        "conflictReject": " → 保留原有记忆不变。",
+        "conflictNoTimeoutStrong": "⚠️ 冲突草稿没有自动超时",
+        "conflictNoTimeout": "，不处理会一直停留在此队列。"
+      }
     },
     "journal": {
       "action": {
@@ -4168,6 +4221,64 @@
         "deprecate": "弃用",
         "reject": "忽略",
         "merge": "合并"
+      },
+      "filter": {
+        "all": "全部记录",
+        "extractRun": "提取运行",
+        "promote": "采纳",
+        "reject": "忽略",
+        "deprecate": "弃用",
+        "create": "新建",
+        "edit": "编辑",
+        "pageRegen": "刷新主题"
+      },
+      "filterLabel": "筛选类型",
+      "empty": "暂无整理记录",
+      "itemCount": "{{n}} 项",
+      "run": {
+        "noModel": "未配置提取模型，本次未运行",
+        "failed": "本次提取失败",
+        "nothingNew": "扫描 {{n}} 段对话，无新增内容",
+        "nothingMemorable": "处理 {{n}} 段对话，未发现可记忆的内容",
+        "summary": "处理 {{n}} 段对话，生成 {{candidates}} 条草稿，晋升 {{promoted}} 条记忆"
+      },
+      "story": {
+        "default": "整理了一段对话",
+        "captured": "记录了 {{capture}} 段对话",
+        "capturedExtracted": "处理了 {{capture}} 段对话，生成 {{extract}} 条记忆草稿",
+        "extracted": "生成了 {{extract}} 条记忆草稿",
+        "regen": "刷新了 {{regen}} 个主题摘要",
+        "capturedRegen": "处理了 {{capture}} 段对话，并刷新了 {{regen}} 个主题摘要",
+        "extractedRegen": "生成了 {{extract}} 条记忆草稿，并刷新了 {{regen}} 个主题摘要"
+      },
+      "tag": {
+        "capture": "📥 {{n}} 段对话",
+        "extract": "📝 {{n}} 条草稿",
+        "regen": "🔄 {{n}} 次刷新"
+      },
+      "target": {
+        "quoted": "「{{text}}」",
+        "atom": "一条记忆",
+        "entity": "一个主题",
+        "candidate": "一条草稿"
+      },
+      "label": {
+        "extractRun": "提取运行",
+        "capture": "记录对话",
+        "extract": "生成草稿",
+        "promote": "采纳",
+        "reject": "忽略",
+        "deprecate": "弃用",
+        "pageRegen": "刷新主题",
+        "create": "创建",
+        "update": "更新",
+        "merge": "合并"
+      },
+      "note": {
+        "linkedTopic": "关联到已有主题「{{name}}」",
+        "newTopic": "新建主题「{{name}}」",
+        "deprecatedNoReplacement": "弃用（无替代记忆）",
+        "semanticDuplicate": "语义重复，已被合并"
       }
     },
     "vs": {
@@ -4262,7 +4373,8 @@
       "runDoctor": "开始检查",
       "doctorAllPassed": "全部检查通过 ✓",
       "doctorFailed": "部分检查未通过，请查看详情",
-      "rowCountDiff": "行数差异："
+      "rowCountDiff": "行数差异：",
+      "hostLocal": "octop（本机）"
     },
     "pipeline": {
       "title": "记忆流水线",
@@ -4290,6 +4402,45 @@
       "daysAgo": "{{n}} 天前",
       "today": "今天",
       "yesterday": "昨天"
+    },
+    "confidenceLevel": {
+      "high": "很有把握",
+      "medium": "一般把握",
+      "low": "不太确定"
+    },
+    "relTime": {
+      "justNow": "刚刚",
+      "minutesAgo": "{{n}} 分钟前",
+      "hoursAgo": "{{n}} 小时前",
+      "daysAgo": "{{n}} 天前",
+      "monthsAgo": "{{n}} 个月前",
+      "yearsAgo": "{{n}} 年前"
+    },
+    "atoms": {
+      "forgotten": "已忘记",
+      "active": "在用",
+      "content": "记忆内容",
+      "quote": "原话依据",
+      "confidence": "可信度",
+      "searchTerms": "关联关键词",
+      "firstRecorded": "首次记录于 {{time}}",
+      "occurredSuffix": " · 发生于 {{time}}",
+      "confidenceTag": "可信度：{{level}}"
+    },
+    "episodeList": {
+      "tagIntensity": "{{emotion}} · 强度 {{n}}",
+      "summary": "摘要",
+      "people": "涉及的人",
+      "occurredAt": "发生于 {{time}}"
+    },
+    "emotion": {
+      "happy": "开心",
+      "sad": "难过",
+      "angry": "生气",
+      "surprised": "惊讶",
+      "anxious": "焦虑",
+      "calm": "平静",
+      "uncategorized": "未分类"
     }
   },
   "personalization": {
@@ -5983,7 +6134,12 @@
     "weknoraFound": "已检测到本机 WeKnora 并填入地址",
     "weknoraNotFound": "未在 OCTOP 主机的 127.0.0.1:8080 检测到 WeKnora",
     "weknoraStep1": "打开 WeKnora 并创建 API Key",
-    "weknoraStep2": "检测本机服务，或手动填写部署地址"
+    "weknoraStep2": "检测本机服务，或手动填写部署地址",
+    "mailProviderQq": "QQ 邮箱",
+    "mailProviderNetease": "网易邮箱",
+    "mailProviderGmail": "Gmail",
+    "mailProviderCustom": "其他",
+    "appIdPlaceholder": "企业 ID / AppId"
   },
   "mbtiPage": {
     "pickAgent": "请先选择一个专家"
