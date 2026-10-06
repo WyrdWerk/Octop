@@ -77,7 +77,10 @@ _SCENE_ORDER = (
     "design",
 )
 _SLUG_RE = re.compile(r"^[A-Za-z0-9_.-]+$")
-_STEP_HEADING_RE = re.compile(r"^##\s*步骤\s*(\d+)\s*[：:]\s*(.+?)\s*$", re.MULTILINE)
+# Workflow step headings: "## 步骤 1：..." (Chinese) or "## Step 1: ..." (English).
+_STEP_HEADING_RE = re.compile(
+    r"^##\s*(?:步骤|Step)\s*(\d+)\s*[：:.]\s*(.+?)\s*$", re.MULTILINE | re.IGNORECASE
+)
 _QUICK_PROMPT_COLORS = (
     "#e8f4ff",
     "#fef3c7",
@@ -946,25 +949,31 @@ def _expert_manifest(
 
 
 def _expert_soul(item: SkillHubSkillset, skill_slugs: list[str]) -> str:
-    name = _expert_label_zh(item)
+    name = _expert_label_en(item)
     skill_list = "\n".join(f"- `{slug}`" for slug in skill_slugs)
-    summary = item.summary or "围绕该 SkillHub skillset 提供专家级工作流支持。"
+    summary = (
+        item.summary_en.strip()
+        or item.summary.strip()
+        or "Expert-level workflow support built on this SkillHub skillset."
+    )
     return f"""# {name}
 
-你是「{name}」，来源于 SkillHub skillset `{item.slug}`。
+You are "{name}", built from the SkillHub skillset `{item.slug}`.
 
-## 专家定位
+## Role
 
 {summary}
 
-## 工作方式
+## How you work
 
-- 优先遵循 `skills/{item.slug}/SKILL.md` 中的工作流编排。
-- 根据用户目标主动拆解步骤、识别输入缺口，并给出可执行产物。
-- 需要具体能力时，调用已安装的配套技能；不要把技能清单当作用户可见负担。
-- 输出时保持结构清晰，先给结论和下一步，再补充必要依据。
+- Follow the workflow in `skills/{item.slug}/SKILL.md` first.
+- Break the user's goal into steps, spot missing inputs, and deliver usable results.
+- Call the bundled skills when a specific capability is needed; do not burden the
+  user with the skill list.
+- Keep output structured: conclusion and next steps first, then supporting detail.
+- Reply in the user's language.
 
-## 配套技能
+## Bundled skills
 
 {skill_list}
 """
@@ -1248,6 +1257,10 @@ def _step_output_target(section: str) -> str:
             return _normalize_output_target(text.removeprefix("输出物"))
         if text.startswith("输出"):
             return _normalize_output_target(text.removeprefix("输出"))
+        lowered = text.lower()
+        for prefix in ("deliverable", "output"):
+            if lowered.startswith(prefix):
+                return _normalize_output_target(text[len(prefix) :])
     return ""
 
 
@@ -1284,19 +1297,59 @@ def _clip_text(text: str, max_chars: int) -> str:
 def _quick_prompt_icon(title: str, section: str, idx: int) -> str:
     text = f"{title}\n{section}"
     keyword_icons = [
-        (("巡检", "健康", "诊断", "异常", "日志", "监控", "分析"), "activity"),
-        (("评分", "指标", "数据", "统计", "预算", "投研", "经营", "趋势"), "trending-up"),
-        (("修复", "调试", "排查", "配置", "风险"), "wrench"),
-        (("云", "实例", "OS", "服务器", "集群", "节点"), "server"),
-        (("代码", "测试", "脚本", "命令", "自动化"), "terminal"),
-        (("视频", "分镜", "镜头", "画面", "剪辑", "脚本"), "video"),
-        (("合同", "文书", "报告", "纪要", "简历", "法条"), "file-text"),
-        (("检索", "搜索", "法规", "跨境", "市场"), "globe"),
-        (("计划", "方案", "策略", "SOP", "流程", "清单"), "list-todo"),
-        (("输出", "生成", "导出", "PPT", "PDF", "交付"), "presentation"),
+        # Chinese and English keywords (SkillHub content is mostly Chinese).
+        (
+            ("巡检", "健康", "诊断", "异常", "日志", "监控", "分析")
+            + ("health", "diagnos", "anomal", "log", "monitor", "analy"),
+            "activity",
+        ),
+        (
+            ("评分", "指标", "数据", "统计", "预算", "投研", "经营", "趋势")
+            + ("score", "metric", "data", "statistic", "budget", "trend"),
+            "trending-up",
+        ),
+        (("修复", "调试", "排查", "配置", "风险") + ("fix", "debug", "config", "risk"), "wrench"),
+        (
+            ("云", "实例", "OS", "服务器", "集群", "节点")
+            + ("cloud", "instance", "server", "cluster", "node"),
+            "server",
+        ),
+        (
+            ("代码", "测试", "脚本", "命令", "自动化")
+            + ("code", "test", "script", "command", "automat"),
+            "terminal",
+        ),
+        (
+            ("视频", "分镜", "镜头", "画面", "剪辑", "脚本")
+            + ("video", "storyboard", "shot", "edit"),
+            "video",
+        ),
+        (
+            ("合同", "文书", "报告", "纪要", "简历", "法条")
+            + ("contract", "document", "report", "minutes", "resume", "statute"),
+            "file-text",
+        ),
+        (
+            ("检索", "搜索", "法规", "跨境", "市场")
+            + ("search", "retriev", "regulation", "cross-border", "market"),
+            "globe",
+        ),
+        (
+            ("计划", "方案", "策略", "SOP", "流程", "清单")
+            + ("plan", "proposal", "strategy", "process", "checklist"),
+            "list-todo",
+        ),
+        (
+            ("输出", "生成", "导出", "PPT", "PDF", "交付")
+            + ("output", "generate", "export", "deliver"),
+            "presentation",
+        ),
     ]
+    lowered = text.lower()
     for keywords, icon in keyword_icons:
-        if any(k in text for k in keywords):
+        # Lowercase (English) keywords match case-insensitively; CJK and
+        # acronyms such as "OS" / "PDF" keep exact matching.
+        if any((k in lowered) if k.islower() else (k in text) for k in keywords):
             return icon
     return [
         "zap",

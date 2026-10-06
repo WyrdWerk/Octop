@@ -745,3 +745,32 @@ def test_fetch_ranking_maps_url_timeout(monkeypatch: pytest.MonkeyPatch) -> None
             "recommended",
             timeout=7,
         )
+
+
+def test_expert_soul_is_english_and_parses_english_steps():
+    from octop.infra.agents.experts.skillhub_market import (
+        SkillHubSkillset,
+        _expert_soul,
+        _workflow_steps,
+        quick_prompts_for_skillset,
+    )
+
+    item = SkillHubSkillset(
+        slug="media-longform-outline",
+        display_name="长篇大纲设计",
+        display_name_en="Long-form Outline Design",
+        summary="把灵感扩展成可长期连载的长篇大纲。",
+        summary_en="Expand ideas into serialization-ready outlines.",
+        scene="media",
+    )
+    soul = _expert_soul(item, ["outline"])
+    assert 'You are "Long-form Outline Design Expert"' in soul
+    assert "Expand ideas into serialization-ready outlines." in soul
+    assert "你是" not in soul
+
+    workflow = "## Step 1: Analyze market\n- Output: a market report\n\n## Step 2: Plan\n"
+    steps = _workflow_steps(workflow)
+    assert [s["title"] for s in steps] == ["Analyze market", "Plan"]
+    prompts = quick_prompts_for_skillset(item, workflow)
+    assert prompts[0]["title"]["en"] == "Analyze market"
+    assert prompts[0]["icon_name"] == "activity"
