@@ -113,8 +113,8 @@ def test_catalog_loads_agent_files(tmp_path: Path) -> None:
     item = catalog.get(_SA_SLUG)
     assert item is not None
     assert item.summary.division == "engineering"
-    # summary.name reflects the authoritative (default=zh) locale name.
-    assert item.summary.name == "软件架构师"
+    # summary.name reflects the authoritative (default=en) locale name.
+    assert item.summary.name == "Software Architect"
     assert "Software Architect" in item.content_for("en")
 
 

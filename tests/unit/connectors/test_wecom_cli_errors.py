@@ -17,7 +17,7 @@ def test_humanize_strips_init_hint() -> None:
     )
     assert "Bot ID" in msg or "Secret" in msg
     assert "wecom-cli" not in msg
-    assert "终端命令" in msg or "禁止" in msg
+    assert "terminal commands" in msg
 
 
 def test_humanize_passes_business_permission_errors() -> None:
@@ -117,3 +117,12 @@ def test_probe_ok_with_mcp_items(monkeypatch: pytest.MonkeyPatch, tmp_path: Path
         lambda *_a, **_k: "usage: wecom-cli doc",
     )
     wecom_cli.probe_credentials({"bot_id": "b1", "bot_secret": "s1", "instance_id": "i1"})
+
+
+def test_humanize_zh_locale_keeps_chinese() -> None:
+    from octop.infra.connectors.locale_ctx import use_connector_locale
+
+    with use_connector_locale("zh"):
+        msg = wecom_cli._humanize_cli_error("请先运行 `wecom-cli init`")  # noqa: SLF001
+    assert "禁止" in msg
+    assert "wecom-cli" not in msg

@@ -44,6 +44,7 @@ from octop.infra.utils.host_dirs import (
     rename_host_dir,
     running_in_container,
 )
+from octop.infra.utils.locale import locale_from_user_row
 
 router = APIRouter()
 
@@ -186,13 +187,15 @@ async def ensure_bwrap(
     summary="Detect whether Docker CLI/daemon are available",
 )
 async def get_docker_status(
-    _: Any = Depends(current_user),
+    user: User = Depends(current_user),
 ) -> dict[str, Any]:
     """Probe Docker without attempting installation.
 
     Returns ``status`` plus ``install_script`` / ``agent_prompt`` for the UI.
     """
-    return await asyncio.to_thread(docker_status, attempt_install=False)
+    return await asyncio.to_thread(
+        docker_status, attempt_install=False, locale=locale_from_user_row(user)
+    )
 
 
 @router.post(
@@ -200,14 +203,14 @@ async def get_docker_status(
     summary="Best-effort ensure Docker Engine for sandbox backends",
 )
 async def post_ensure_docker(
-    _: Any = Depends(current_user),
+    user: User = Depends(current_user),
 ) -> dict[str, Any]:
     """Detect Docker; on Linux with passwordless sudo, try package install.
 
     Never fails the HTTP call for missing packages — returns guidance fields
     (``install_script``, ``agent_prompt``, ``docs_url``) for the dashboard.
     """
-    return await asyncio.to_thread(ensure_docker)
+    return await asyncio.to_thread(ensure_docker, locale=locale_from_user_row(user))
 
 
 @router.post("/mkdir")

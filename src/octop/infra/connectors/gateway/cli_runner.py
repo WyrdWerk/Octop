@@ -8,6 +8,8 @@ import subprocess
 from collections.abc import Mapping
 from typing import Any
 
+from octop.infra.connectors.locale_ctx import ctr
+
 DEFAULT_TIMEOUT_S = 30.0
 _MAX_ERR_CHARS = 4000
 
@@ -15,11 +17,7 @@ _MAX_ERR_CHARS = 4000
 def resolve_binary(name: str) -> str:
     path = shutil.which(name)
     if not path:
-        raise ValueError(
-            f"未找到主机命令 {name!r}。"
-            "请打开 Octop「连接器」抽屉，由管理员安装 CLI，或在主机 PATH 中自行安装。"
-            "禁止在 Agent 终端中查找或安装该命令。"
-        )
+        raise ValueError(ctr("connector.gateway.cli.host_command_missing", name=name))
     return path
 
 
@@ -46,9 +44,15 @@ def run_cli(
             check=False,
         )
     except FileNotFoundError as exc:
-        raise ValueError(f"未找到命令 {argv[0]!r}，请检查 PATH") from exc
+        raise ValueError(ctr("connector.gateway.cli.command_not_found", name=argv[0])) from exc
     except subprocess.TimeoutExpired as exc:
-        raise ValueError(f"CLI 超时（>{timeout_s:.0f}s）: {' '.join(argv[:4])}") from exc
+        raise ValueError(
+            ctr(
+                "connector.gateway.cli.timeout",
+                seconds=f"{timeout_s:.0f}",
+                command=" ".join(argv[:4]),
+            )
+        ) from exc
 
     stdout = (completed.stdout or "").strip()
     stderr = (completed.stderr or "").strip()

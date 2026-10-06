@@ -30,7 +30,7 @@ def test_seeded_roles_leave_existing_users_unchanged(tmp_path: Path) -> None:
     roles = UserRoleRepo(db)
     admin = roles.get("admin")
     user = roles.get("user")
-    assert admin is not None and admin.user_role_name == "管理员"
+    assert admin is not None and admin.user_role_name == "Administrator"
     assert admin.policies == []
     assert user is not None
     assert set(user.permissions) == set(BASELINE_PERMISSIONS)
@@ -92,7 +92,7 @@ def test_cli_and_seed_follow_preset_user_role(tmp_path: Path) -> None:
     row = UserRepo(db).get_by_username("cliuser")
     assert row is not None
     assert row.role == "user"
-    assert row.role_name == "用户"
+    assert row.role_name == "User"
     assert set(row.permissions) == set(BASELINE_PERMISSIONS)
 
     assignment = seeded_user_role_assignment(db)

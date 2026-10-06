@@ -46,6 +46,7 @@ from octop.infra.connectors.gateway.cli_install import (
     install_connector_cli,
 )
 from octop.infra.connectors.gateway.feishu_user_auth import live_user_auth_preview
+from octop.infra.connectors.locale_ctx import bind_connector_locale
 from octop.infra.connectors.oauth import (
     auth_info_for_kind,
     delete_oauth_ctx,
@@ -74,7 +75,13 @@ from octop.infra.utils.ulid import new_ulid
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter()
+
+async def _bind_connector_locale(request: Request) -> None:
+    """Localize adapter / probe messages for this request (async: same task context)."""
+    bind_connector_locale(resolve_request_locale(request))
+
+
+router = APIRouter(dependencies=[Depends(_bind_connector_locale)])
 
 
 class CreateInstanceBody(BaseModel):

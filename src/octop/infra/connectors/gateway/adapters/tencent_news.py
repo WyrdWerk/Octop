@@ -8,6 +8,15 @@ from typing import Any
 
 import httpx
 
+from octop.infra.connectors.locale_ctx import ctr
+
+_I18N = "connector.gateway."
+
+
+def _provider() -> str:
+    return ctr(_I18N + "providers.tencent_news")
+
+
 OPENAPI_SEARCH_URL = "https://openapi.inews.qq.com/api/v1/agent/search"
 # Match tencent-news-cli ≥1.0.14 (Caller-Skill + Skill-Request-Id are required by some keys).
 _CALLER_SKILL = "octop_tencent-news_0.1"
@@ -48,7 +57,7 @@ def _api_key(creds: dict[str, Any]) -> str:
         creds.get("api_key") or creds.get("cookie") or creds.get("auth_code") or ""
     ).strip()
     if not api_key:
-        raise ValueError("请填写腾讯新闻 API Key")
+        raise ValueError(ctr(_I18N + "common.api_key_required", provider=_provider()))
     return api_key
 
 
@@ -91,8 +100,12 @@ def search_news(creds: dict[str, Any], args: dict[str, Any]) -> str:
         if code not in (0, None, "0"):
             msg = str(base.get("msg") or base.get("message") or code)
             if code in (4006, "4006") or "apikey" in msg.lower() or "api key" in msg.lower():
-                raise ValueError(f"腾讯新闻 API Key 无效: {msg}")
-            raise ValueError(f"腾讯新闻接口错误 [{code}]: {msg}")
+                raise ValueError(
+                    ctr(_I18N + "common.api_key_invalid", provider=_provider(), detail=msg)
+                )
+            raise ValueError(
+                ctr(_I18N + "common.api_error_code", provider=_provider(), code=code, detail=msg)
+            )
     return json.dumps(payload, ensure_ascii=False, indent=2)
 
 

@@ -7,6 +7,10 @@ from typing import Any
 
 import httpx
 
+from octop.infra.connectors.locale_ctx import ctr
+
+_I18N = "connector.gateway."
+
 WEREAD_GATEWAY_URL = "https://i.weread.qq.com/api/agent/gateway"
 WEREAD_SKILL_VERSION = "1.0.3"
 
@@ -63,10 +67,7 @@ def _api_key(creds: dict[str, Any]) -> str:
     if not api_key:
         raise ValueError("missing wechat-reading API key")
     if not api_key.startswith("wrk-"):
-        raise ValueError(
-            "微信读书需使用 wrk- 开头的 API Key（非浏览器 Cookie）。"
-            "请打开 https://weread.qq.com/r/weread-skills 登录后复制 API Key 并更新连接器配置"
-        )
+        raise ValueError(ctr("connector.gateway.wechat_reading.key_prefix"))
     return api_key
 
 

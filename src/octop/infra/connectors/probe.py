@@ -23,6 +23,7 @@ from octop.infra.connectors.catalog import (
 )
 from octop.infra.connectors.gateway.protocol import handle_mcp_request
 from octop.infra.connectors.gateway.registry import probe_gateway_credentials
+from octop.infra.connectors.locale_ctx import ctr
 from octop.infra.connectors.oauth.discovery import discover_oauth_from_mcp_url
 from octop.infra.errors import OctopError
 from octop.infra.utils.ssrf_guard import UnsafeOutboundUrl, safe_request
@@ -88,7 +89,7 @@ def http_error_message(response: httpx.Response) -> str | None:
     except Exception:
         pass
     if response.status_code == 401:
-        return "认证失败，请检查 Token 或授权码"
+        return ctr("connector.probe.auth_failed")
     return f"HTTP {response.status_code}"
 
 
@@ -191,13 +192,13 @@ def _probe_mcp_mcp_error(exc: McpError, *, kind: str) -> dict[str, Any]:
         return {
             "ok": False,
             "error_type": "connection",
-            "error": "与上游 MCP 服务的连接被中断（可能是网络/代理/地域限制），并非密钥无效",
+            "error": ctr("connector.probe.connection_interrupted"),
         }
     if kind == "youdao-note":
         return {
             "ok": False,
             "error_type": "auth",
-            "error": "API Key 无效或服务暂时不可用，请检查 Key 或在 MCP 平台重新创建",
+            "error": ctr("connector.probe.api_key_invalid_or_unavailable"),
         }
     return {"ok": False, "error_type": "connection", "error": str(exc)}
 
@@ -309,7 +310,7 @@ def _probe_youdao_note_http_error(exc: httpx.HTTPStatusError) -> dict[str, Any]:
         return {
             "ok": False,
             "error_type": "auth",
-            "error": "API Key 无效，请检查或在 MCP 平台重新创建",
+            "error": ctr("connector.probe.api_key_invalid"),
             "status_code": 401,
         }
     err = http_error_message(exc.response)
@@ -437,7 +438,7 @@ async def probe_connector(
             or ""
         ).strip()
         if not api_key:
-            return {"ok": False, "error": "请填写 API Key"}
+            return {"ok": False, "error": ctr("connector.probe.api_key_required")}
         return await probe_youdao_note(api_key)
 
     spec = build_http_mcp_spec(
@@ -482,7 +483,7 @@ async def probe_connector(
     if r.status_code >= 500:
         return {
             "ok": False,
-            "error": f"远端服务错误 HTTP {r.status_code}",
+            "error": ctr("connector.probe.remote_server_error", status=r.status_code),
             "status_code": r.status_code,
         }
 

@@ -411,11 +411,12 @@ async def test_create_from_expert_default_name_uses_expert_label(env: Any) -> No
     c, _srv, auth = env
     r = await c.post(
         "/api/agents/from-expert/ops-engineer",
-        headers={**auth, "Accept-Language": "zh"},
+        headers=auth,
         json={},
     )
     assert r.status_code == 201, r.text
-    assert r.json()["name"] == "运维工程师 Ops"
+    # New users default to the ``en`` locale, so the English label is used.
+    assert r.json()["name"] == "Ops · SRE Engineer"
 
 
 async def test_create_from_expert_stores_backend(env: Any) -> None:

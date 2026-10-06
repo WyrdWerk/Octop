@@ -68,7 +68,7 @@ def resolve_cli_locale() -> str:
                     return row.locale
     except Exception:
         pass
-    return "zh"
+    return "en"
 
 
 def agent_row_to_dict(row: Any) -> dict[str, Any]:

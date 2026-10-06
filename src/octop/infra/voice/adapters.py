@@ -5,6 +5,7 @@ from __future__ import annotations
 import base64
 import json
 import math
+import re
 import struct
 import uuid
 from collections.abc import AsyncIterator
@@ -249,6 +250,9 @@ async def synthesize_tencent(
     yield base64.b64decode(str(audio_b64))
 
 
+_CJK_RE = re.compile(r"[\u4e00-\u9fff]")
+
+
 async def synthesize_edge(
     row: VoiceProviderRow,
     text: str,
@@ -259,7 +263,8 @@ async def synthesize_edge(
     import edge_tts
 
     extra = row.get_extra()
-    voice = voice_id or str(extra.get("voice_id") or "zh-CN-XiaoxiaoNeural")
+    default_voice = "zh-CN-XiaoxiaoNeural" if _CJK_RE.search(text or "") else "en-US-AriaNeural"
+    voice = voice_id or str(extra.get("voice_id") or default_voice)
     rate_pct = int((speed - 1.0) * 100)
     rate = f"{rate_pct:+d}%"
     communicate = edge_tts.Communicate(text, voice=voice, rate=rate)
@@ -517,7 +522,7 @@ async def test_stt(
     )
     token = _ui_locale.set(locale)
     try:
-        await transcribe(row, _probe_tone_wav(), mime="audio/wav", language="zh-CN")
+        await transcribe(row, _probe_tone_wav(), mime="audio/wav", language="en-US")
     except Exception as exc:  # probe reports failures, never 500s
         return _probe_failure(exc, locale=locale)
     finally:

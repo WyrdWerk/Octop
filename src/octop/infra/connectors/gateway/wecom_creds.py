@@ -17,7 +17,9 @@ from urllib.request import Request, urlopen
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 
 from octop.infra.connectors.gateway.cli_fingerprint import credential_fingerprint
+from octop.infra.connectors.locale_ctx import ctr
 
+_I18N = "connector.gateway.wecom_creds."
 _MCP_CONFIG_URL = "https://qyapi.weixin.qq.com/cgi-bin/aibot/cli/get_mcp_config"
 _FINGERPRINT_NAME = ".octop_wecom_fingerprint"
 _BIND_SOURCE_INTERACTIVE = 1
@@ -136,21 +138,21 @@ def _fetch_mcp_config(*, bot_id: str, bot_secret: str) -> list[dict[str, Any]]:
             raw = resp.read().decode("utf-8")
     except HTTPError as exc:
         detail = exc.read().decode("utf-8", errors="replace") if exc.fp else str(exc)
-        raise ValueError(f"企业微信 get_mcp_config HTTP {exc.code}: {detail}") from exc
+        raise ValueError(ctr(_I18N + "http_error", code=exc.code, detail=detail)) from exc
     except URLError as exc:
-        raise ValueError(f"企业微信 get_mcp_config 网络错误: {exc}") from exc
+        raise ValueError(ctr(_I18N + "network_error", error=exc)) from exc
 
     try:
         data = json.loads(raw)
     except json.JSONDecodeError as exc:
-        raise ValueError(f"企业微信 get_mcp_config 返回非 JSON: {raw[:200]}") from exc
+        raise ValueError(ctr(_I18N + "non_json", raw=raw[:200])) from exc
     if not isinstance(data, dict):
-        raise ValueError("企业微信 get_mcp_config 返回格式无效")
+        raise ValueError(ctr(_I18N + "invalid_format"))
     errcode = int(data.get("errcode") or 0)
     if errcode != 0:
         errmsg = str(data.get("errmsg") or f"errcode={errcode}").strip()
-        raise ValueError(f"企业微信凭证校验失败: {errmsg}")
+        raise ValueError(ctr(_I18N + "verify_failed", error=errmsg))
     items = data.get("list")
     if not isinstance(items, list) or not items:
-        raise ValueError("企业微信返回空 MCP 配置列表，请确认机器人已开通 CLI 能力")
+        raise ValueError(ctr(_I18N + "empty_list"))
     return [item for item in items if isinstance(item, dict)]

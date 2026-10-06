@@ -10,11 +10,13 @@ from urllib.parse import parse_qs, urlparse
 from octop.infra.connectors.gateway.cli_dirs import resolve_cli_config_key
 from octop.infra.connectors.gateway.cli_runner import run_cli
 from octop.infra.connectors.gateway.feishu_creds import prepare_feishu_cli_env
+from octop.infra.connectors.locale_ctx import ctr
 from octop.infra.utils.paths import PathLayout
 
 # ``docs +search`` requires user identity + ``search:docs:read``.
 # Official guidance for full domain scopes: ``auth login --domain all``
 # (without ``--recommend``, which only requests auto-approve scopes).
+_I18N = "connector.gateway.feishu_user_auth."
 _DEFAULT_DOMAINS = ("all",)
 _DEFAULT_SCOPES = ("search:docs:read",)
 
@@ -55,7 +57,7 @@ def start_user_device_login(
         or ""
     ).strip()
     if not device_code or not verification_url:
-        raise ValueError(f"lark-cli auth login --no-wait 返回不完整: {raw[:500]}")
+        raise ValueError(ctr(_I18N + "login_incomplete", raw=raw[:500]))
     expires_in = payload.get("expires_in")
     return {
         "device_code": device_code,
@@ -93,7 +95,7 @@ def complete_user_device_login(
     user_available = isinstance(user, dict) and bool(user.get("available"))
     identity = str(status.get("identity") or status.get("defaultAs") or "").strip()
     if not user_available:
-        raise ValueError("用户授权未完成或 token 无效。请重新点击「登录授权」并打开链接完成授权。")
+        raise ValueError(ctr(_I18N + "not_completed"))
     missing_search = not _auth_has_scope(binary=binary, env=env, scope="search:docs:read")
     return {
         "ok": True,
@@ -107,12 +109,7 @@ def complete_user_device_login(
         ),
         "search_docs_scope": not missing_search,
         "auth_status": status,
-        "warning": (
-            "已登录，但缺少 search:docs:read。"
-            "请在飞书开放平台为应用开通该权限后，再点一次「登录授权」。"
-            if missing_search
-            else None
-        ),
+        "warning": ctr(_I18N + "missing_scope") if missing_search else None,
     }
 
 

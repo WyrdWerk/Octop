@@ -6,9 +6,11 @@ import json
 import shlex
 from typing import Any
 
+from octop.i18n.loader import all_locale_variants
 from octop.infra.connectors.gateway.cli_dirs import resolve_cli_config_key
 from octop.infra.connectors.gateway.cli_runner import resolve_binary, run_cli
 from octop.infra.connectors.gateway.feishu_creds import prepare_feishu_cli_env
+from octop.infra.connectors.locale_ctx import ctr
 from octop.infra.utils.paths import PathLayout
 
 _KIND = "feishu-cli"
@@ -26,92 +28,92 @@ _USER_ONLY_SHORTCUTS = frozenset(
     }
 )
 
-_USER_AUTH_REQUIRED_MSG = (
-    "文档搜索需要先完成飞书账号授权。"
-    "请用户打开 Octop「连接器 → 飞书 CLI」，点击「登录授权」并在弹出页完成授权，然后点「我已授权」。"
-    "禁止建议、生成或执行任何终端命令（包括任何 CLI）。"
-)
-_MISSING_SEARCH_SCOPE_MSG = (
-    "文档搜索权限尚未授予当前登录用户。"
-    "请用户打开 Octop「连接器 → 飞书 CLI」，点击「登录授权」重新授权；"
-    "若仍失败，再到飞书开放平台确认已开通并发布「搜索云文档」权限。"
-    "禁止建议、生成或执行任何终端命令（包括任何 CLI）。"
-)
+_I18N = "connector.gateway.feishu_cli."
 
-TOOLS: list[dict[str, Any]] = [
-    {
-        "name": "doc",
-        "description": (
-            "Feishu docs via Octop Connectors (gateway). "
-            "method examples: '+search', '+fetch', '+create'. "
-            "On auth/permission errors: tell the user to open Octop "
-            "Connectors → 飞书 CLI → 登录授权. "
-            "NEVER suggest or run shell/CLI commands. NEVER invent auth login commands."
-        ),
-        "inputSchema": {
-            "type": "object",
-            "properties": {
-                "method": {"type": "string"},
-                "args": {"type": "object"},
-            },
-            "required": ["method"],
-        },
-    },
-    {
-        "name": "base",
-        "description": "Feishu Base (多维表格) via lark-cli base <method…>",
-        "inputSchema": {
-            "type": "object",
-            "properties": {
-                "method": {"type": "string"},
-                "args": {"type": "object"},
-            },
-            "required": ["method"],
-        },
-    },
-    {
-        "name": "calendar",
-        "description": "Feishu calendar via lark-cli calendar <method…>",
-        "inputSchema": {
-            "type": "object",
-            "properties": {
-                "method": {"type": "string"},
-                "args": {"type": "object"},
-            },
-            "required": ["method"],
-        },
-    },
-    {
-        "name": "im",
-        "description": "Feishu messenger via lark-cli im <method…>",
-        "inputSchema": {
-            "type": "object",
-            "properties": {
-                "method": {"type": "string"},
-                "args": {"type": "object"},
-            },
-            "required": ["method"],
-        },
-    },
-    {
-        "name": "help",
-        "description": "Show lark-cli help for a domain (doc|base|calendar|im)",
-        "inputSchema": {
-            "type": "object",
-            "properties": {
-                "category": {
-                    "type": "string",
-                    "description": "doc | base | calendar | im",
+
+def _user_auth_required_msg() -> str:
+    return ctr(_I18N + "user_auth_required")
+
+
+def _missing_search_scope_msg() -> str:
+    return ctr(_I18N + "missing_search_scope")
+
+
+def _tools() -> list[dict[str, Any]]:
+    return [
+        {
+            "name": "doc",
+            "description": (
+                "Feishu docs via Octop Connectors (gateway). "
+                "method examples: '+search', '+fetch', '+create'. "
+                "On auth/permission errors: tell the user to open Octop "
+                f"{ctr(_I18N + 'doc_auth_hint')}. "
+                "NEVER suggest or run shell/CLI commands. NEVER invent auth login commands."
+            ),
+            "inputSchema": {
+                "type": "object",
+                "properties": {
+                    "method": {"type": "string"},
+                    "args": {"type": "object"},
                 },
+                "required": ["method"],
             },
-            "required": ["category"],
         },
-    },
-]
+        {
+            "name": "base",
+            "description": ctr(_I18N + "base_description"),
+            "inputSchema": {
+                "type": "object",
+                "properties": {
+                    "method": {"type": "string"},
+                    "args": {"type": "object"},
+                },
+                "required": ["method"],
+            },
+        },
+        {
+            "name": "calendar",
+            "description": "Feishu calendar via lark-cli calendar <method…>",
+            "inputSchema": {
+                "type": "object",
+                "properties": {
+                    "method": {"type": "string"},
+                    "args": {"type": "object"},
+                },
+                "required": ["method"],
+            },
+        },
+        {
+            "name": "im",
+            "description": "Feishu messenger via lark-cli im <method…>",
+            "inputSchema": {
+                "type": "object",
+                "properties": {
+                    "method": {"type": "string"},
+                    "args": {"type": "object"},
+                },
+                "required": ["method"],
+            },
+        },
+        {
+            "name": "help",
+            "description": "Show lark-cli help for a domain (doc|base|calendar|im)",
+            "inputSchema": {
+                "type": "object",
+                "properties": {
+                    "category": {
+                        "type": "string",
+                        "description": "doc | base | calendar | im",
+                    },
+                },
+                "required": ["category"],
+            },
+        },
+    ]
 
 
 def list_tools() -> list[dict[str, Any]]:
-    return TOOLS
+    return _tools()
 
 
 def call_tool(creds: dict[str, Any], name: str, args: dict[str, Any]) -> str:
@@ -138,12 +140,12 @@ def call_tool(creds: dict[str, Any], name: str, args: dict[str, Any]) -> str:
             creds.get("default_as") or ""
         ).strip().lower() != "user":
             # Octop has not recorded a completed user OAuth yet.
-            raise ValueError(_USER_AUTH_REQUIRED_MSG)
+            raise ValueError(_user_auth_required_msg())
         env = _prepare_env(creds, prefer_identity=identity)
         if (domain, tokens[0]) in _USER_ONLY_SHORTCUTS and not _has_user_scope(
             binary, env, "search:docs:read"
         ):
-            raise ValueError(_MISSING_SEARCH_SCOPE_MSG)
+            raise ValueError(_missing_search_scope_msg())
         raw_args = args.get("args")
         payload: dict[str, Any] = raw_args if isinstance(raw_args, dict) else {}
         argv = _build_argv(binary, domain, method, payload, identity=identity)
@@ -203,28 +205,24 @@ def _build_argv(
 
 def _humanize_cli_error(message: str) -> str:
     text = (message or "").strip()
-    if text in {_MISSING_SEARCH_SCOPE_MSG, _USER_AUTH_REQUIRED_MSG}:
+    if text in all_locale_variants(_I18N + "missing_search_scope", _I18N + "user_auth_required"):
         return text
     if text.startswith("文档搜索权限尚未授予") or text.startswith("文档搜索缺少权限"):
-        return _MISSING_SEARCH_SCOPE_MSG
+        return _missing_search_scope_msg()
     if text.startswith("文档搜索需要"):
-        return _USER_AUTH_REQUIRED_MSG
+        return _user_auth_required_msg()
     lower = text.lower()
     if "search:docs:read" in lower or "missing required scope" in lower:
-        return _MISSING_SEARCH_SCOPE_MSG
+        return _missing_search_scope_msg()
     if (
         "only supports: user" in lower
         or "--as bot is not supported" in lower
         or "lark-cli auth login" in lower
         or "run `lark-cli auth login" in lower
     ):
-        return _USER_AUTH_REQUIRED_MSG
+        return _user_auth_required_msg()
     if "command not found" in lower or "未找到命令" in text:
-        return (
-            "主机上的飞书 CLI 未安装或不在 PATH。"
-            "请在连接器抽屉中使用「安装 CLI」。"
-            "禁止建议或执行任何终端命令。"
-        )
+        return ctr(_I18N + "missing_cli")
     return text
 
 
@@ -268,12 +266,7 @@ def probe_credentials(creds: dict[str, Any]) -> None:
     user = identities.get("user") if isinstance(identities, dict) else None
     # App ID / App Secret must always mint a working bot identity.
     if not isinstance(bot, dict) or not bot.get("available"):
-        raise ValueError(
-            "飞书 App ID / App Secret 无效，或应用未启用机器人能力。请核对开放平台凭证后再试。"
-        )
+        raise ValueError(ctr(_I18N + "bad_app_creds"))
     default_as = str(creds.get("default_as") or "bot").strip().lower()
     if default_as == "user" and (not isinstance(user, dict) or not user.get("available")):
-        raise ValueError(
-            "飞书用户身份未就绪。请先在「连接器 → 飞书 CLI」完成登录授权，"
-            "否则文档搜索等仅用户身份可用的能力无法使用。"
-        )
+        raise ValueError(ctr(_I18N + "user_identity_not_ready"))

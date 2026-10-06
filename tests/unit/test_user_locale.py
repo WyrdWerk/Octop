@@ -19,11 +19,11 @@ def db(tmp_path: Path) -> SqlitePool:
     return pool
 
 
-def test_users_table_has_locale_default_zh(db: SqlitePool):
+def test_user_repo_create_defaults_locale_en(db: SqlitePool):
     uid = UserRepo(db).create(username="u", password_hash="h", role="user")
     row = UserRepo(db).get(uid)
     assert row is not None
-    assert row.locale == "zh"
+    assert row.locale == "en"
 
 
 def test_user_repo_create_accepts_explicit_locale(db: SqlitePool):

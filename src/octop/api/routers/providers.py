@@ -12,6 +12,7 @@ from fastapi import APIRouter, Depends, Request
 from pydantic import BaseModel
 
 from octop.api.deps import current_user, get_server, require_permission
+from octop.i18n import tr
 from octop.infra.agents.providers.codex_apply import (
     CODEX_PROVIDER_NAME,
     apply_codex_credentials,
@@ -37,7 +38,7 @@ from octop.infra.agents.providers.reasoning import reasoning_capability
 from octop.infra.agents.providers.resolved import list_resolved_models as _list_resolved_models
 from octop.infra.agents.providers.store import clear_stale_pins_for_provider
 from octop.infra.errors import ErrorCode, OctopError
-from octop.infra.utils.locale import resolve_request_locale
+from octop.infra.utils.locale import resolve_request_locale, resolve_user_locale
 from octop.infra.utils.ulid import new_ulid
 
 logger = logging.getLogger(__name__)
@@ -391,7 +392,16 @@ async def _run_codex_device_poll(
             return
         settings.set(
             f"codex_oauth.pending.{state_id}",
-            json.dumps({"status": "error", "error": "登录超时，请重新开始", "user_id": user_id}),
+            json.dumps(
+                {
+                    "status": "error",
+                    "error": tr(
+                        "providers.codex_oauth_timeout",
+                        resolve_user_locale(user_repo=server.services.user_repo, user_id=user_id),
+                    ),
+                    "user_id": user_id,
+                }
+            ),
         )
     except Exception as exc:
         logger.exception("codex device oauth poll failed")

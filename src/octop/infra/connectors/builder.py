@@ -16,6 +16,7 @@ from octop.infra.connectors.catalog import (
     uses_internal_http_mcp,
 )
 from octop.infra.connectors.custom_mcp import validate_mcp_http_url
+from octop.infra.connectors.locale_ctx import ctr
 from octop.infra.connectors.mail_servers import resolve_mail_servers
 from octop.infra.utils.ulid import new_ulid
 
@@ -340,19 +341,11 @@ def validate_create_credentials(
         if not api_key:
             raise ValueError("api_key is required")
         if entry.kind == "wechat-reading" and not api_key.startswith("wrk-"):
-            raise ValueError(
-                "微信读书需使用 wrk- 开头的 API Key，请登录 "
-                "https://weread.qq.com/r/weread-skills 获取"
-            )
+            raise ValueError(ctr("connector.gateway.wechat_reading.key_prefix_short"))
         if entry.kind == "qq-music" and not api_key.startswith("qmk-"):
-            raise ValueError(
-                "QQ 音乐需使用 qmk- 开头的 API Key，请登录 "
-                "https://y.qq.com/n/ryqq_v2/qqmusic_skills 获取"
-            )
+            raise ValueError(ctr("connector.gateway.qq_music.key_prefix"))
         if entry.kind == "yuandian" and not api_key.startswith("sk_"):
-            raise ValueError(
-                "元典需使用 sk_ 开头的 API Key，请登录 https://open.chineselaw.com/profile 获取"
-            )
+            raise ValueError(ctr("connector.gateway.yuandian.key_prefix_short"))
         if entry.kind == "didi":
             return {"api_key": api_key}
         internal_token = new_internal_token()

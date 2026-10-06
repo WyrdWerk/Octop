@@ -429,11 +429,11 @@ def test_serialize_history_message_drops_placeholder_for_en_locale() -> None:
     assert entry["content"] == []
 
 
-def test_strip_image_only_text_blocks_without_user_skips_zh_default() -> None:
-    """Locale falls back to ``zh`` when no user is supplied."""
+def test_strip_image_only_text_blocks_without_user_skips_en_default() -> None:
+    """Locale falls back to ``en`` when no user is supplied."""
     msg = HumanMessage(
         content=[
-            {"type": "text", "text": "用户发送了图片。"},
+            {"type": "text", "text": "User sent an image."},
             {"type": "text", "text": _PLACEHOLDER_TEXT},
         ],
         additional_kwargs={

@@ -16,6 +16,15 @@ from typing import Any
 import httpx
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 
+from octop.infra.connectors.locale_ctx import ctr, localize_schema
+
+_I18N = "connector.gateway."
+
+
+def _provider() -> str:
+    return ctr(_I18N + "providers.fliggy")
+
+
 MCP_URL = "https://flyai.open.fliggy.com/mcp"
 # Public signing material from @fly-ai/flyai-cli (required by Fliggy MCP).
 _SIGN_SECRET = "XSbdYnucPARDc9knhD8+X6hxdD1Nh6ZGI6Hadg25kBw="
@@ -26,13 +35,13 @@ _USER_AGENT = "octop-connector/0.1"
 TOOLS: list[dict[str, Any]] = [
     {
         "name": "fliggy_ai_search",
-        "description": "飞猪 AI 搜索：用自然语言查酒店、景点、航班、火车等",
+        "description": "i18n:connector.gateway.tools.fliggy.ai_search",
         "inputSchema": {
             "type": "object",
             "properties": {
                 "query": {
                     "type": "string",
-                    "description": "完整自然语言需求，如「明天北京到上海机票」",
+                    "description": "i18n:connector.gateway.tools.fliggy.ai_query",
                 },
             },
             "required": ["query"],
@@ -40,13 +49,13 @@ TOOLS: list[dict[str, Any]] = [
     },
     {
         "name": "fliggy_fast_search",
-        "description": "飞猪极速关键词搜索：景点、酒店、门票、线路等",
+        "description": "i18n:connector.gateway.tools.fliggy.fast_search",
         "inputSchema": {
             "type": "object",
             "properties": {
                 "query": {
                     "type": "string",
-                    "description": "关键词，如「杭州西湖附近酒店」",
+                    "description": "i18n:connector.gateway.tools.fliggy.fast_query",
                 },
             },
             "required": ["query"],
@@ -58,7 +67,7 @@ _TOOL_NAMES = frozenset(t["name"] for t in TOOLS)
 
 
 def list_tools() -> list[dict[str, Any]]:
-    return TOOLS
+    return localize_schema(TOOLS)
 
 
 def call_tool(creds: dict[str, Any], name: str, args: dict[str, Any]) -> str:
@@ -86,7 +95,7 @@ def probe_credentials(creds: dict[str, Any]) -> None:
 def _api_key(creds: dict[str, Any]) -> str:
     api_key = str(creds.get("api_key") or "").strip()
     if not api_key:
-        raise ValueError("请填写飞猪 API Key")
+        raise ValueError(ctr(_I18N + "common.api_key_required", provider=_provider()))
     return api_key
 
 
@@ -178,18 +187,20 @@ def _mcp_call(creds: dict[str, Any], method: str, params: dict[str, Any]) -> Any
     with httpx.Client(timeout=60.0) as client:
         r = client.post(MCP_URL, headers=headers, content=body.encode("utf-8"))
     if r.status_code == 401:
-        raise ValueError("飞猪 API Key 无效或鉴权失败")
+        raise ValueError(ctr(_I18N + "fliggy.auth_failed"))
     r.raise_for_status()
     payload = r.json()
     if not isinstance(payload, dict):
-        raise ValueError("飞猪 MCP 返回格式错误")
+        raise ValueError(ctr(_I18N + "fliggy.bad_response"))
     if payload.get("error"):
         err = payload["error"]
         msg = err.get("message") if isinstance(err, dict) else err
         text = str(msg or err)
         if "authorization" in text.lower() or "api key" in text.lower():
-            raise ValueError(f"飞猪 API Key 无效: {text}")
-        raise ValueError(f"飞猪 MCP 错误: {text}")
+            raise ValueError(
+                ctr(_I18N + "common.api_key_invalid", provider=_provider(), detail=text)
+            )
+        raise ValueError(ctr(_I18N + "fliggy.mcp_error", detail=text))
     return payload.get("result")
 
 

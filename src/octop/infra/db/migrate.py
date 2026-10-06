@@ -1030,7 +1030,7 @@ def _seed_user_roles(db: DatabasePool) -> None:
                 "INSERT INTO user_role("
                 "user_role_id, user_role_name, permissions, policies, created_at, updated_at"
                 ") VALUES ('admin', ?, '[]', '[]', ?, ?)",
-                ("管理员", ts, ts),
+                ("Administrator", ts, ts),
             )
     with db.connect() as conn:
         user = conn.execute(
@@ -1044,7 +1044,7 @@ def _seed_user_roles(db: DatabasePool) -> None:
                 "INSERT INTO user_role("
                 "user_role_id, user_role_name, permissions, policies, created_at, updated_at"
                 ") VALUES ('user', ?, ?, '[]', ?, ?)",
-                ("用户", payload, ts, ts),
+                ("User", payload, ts, ts),
             )
 
 

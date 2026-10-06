@@ -203,7 +203,7 @@ class ProactiveCareService:
                 exc,
             )
 
-        # Resolve locale from agent config; default to zh.
+        # Resolve locale from agent config; default to DEFAULT_LOCALE (en).
         agent_config = getattr(agent, "config", None)
         raw_locale = getattr(agent_config, "locale", None) if agent_config is not None else None
         locale = normalize_locale(str(raw_locale) if raw_locale is not None else None)

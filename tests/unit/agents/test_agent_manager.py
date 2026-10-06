@@ -631,6 +631,21 @@ def test_build_harness_config_accepts_memory_extract_settings(manager: AgentMana
         assert cfg.memory_extract_idle_seconds == 600.0
 
 
+def test_build_harness_config_passes_language(manager: AgentManager) -> None:
+    """Octop always sets ``language`` (harness defaults to ``zh``)."""
+    from dataclasses import replace as dc_replace
+
+    users = manager._repos.user_repo
+    en_uid = users.create(username="lang-en", password_hash="h", role="user")
+    zh_uid = users.create(username="lang-zh", password_hash="h", role="user", locale="zh")
+
+    assert manager._build_harness_config(dc_replace(_row(), user_id=en_uid)).language == "en"
+    assert manager._build_harness_config(dc_replace(_row(), user_id=zh_uid)).language == "zh"
+    assert manager._build_harness_config(dc_replace(_row(), user_id=None)).language == "en"
+    explicit = dc_replace(_row(config_json=json.dumps({"language": "en"})), user_id=zh_uid)
+    assert manager._build_harness_config(explicit).language == "en"
+
+
 def test_format_agent_start_error_unwraps_exception_group() -> None:
     exc = BaseExceptionGroup(
         "unhandled errors in a TaskGroup (1 sub-exception)",
@@ -1813,9 +1828,10 @@ async def test_templated_agent_keeps_expert_soul_on_reload(manager: AgentManager
         ),
     )
     agent = manager.get_agent(row.agent_id)
-    expected_soul = (default_library_root() / "general-assistant" / "SOUL.md").read_text(
-        encoding="utf-8"
-    )
+    # Owner-less agents use the default ``en`` locale → ``locales/en`` overlay.
+    expected_soul = (
+        default_library_root() / "general-assistant" / "locales" / "en" / "SOUL.md"
+    ).read_text(encoding="utf-8")
     soul_text = agent.workspace.read_text("SOUL.md") or ""
     assert expected_soul.strip() in soul_text.strip()
 

@@ -6,7 +6,7 @@ from typing import Literal
 
 Locale = Literal["zh", "en"]
 
-DEFAULT_LOCALE: Locale = "zh"
+DEFAULT_LOCALE: Locale = "en"
 SUPPORTED_LOCALES: tuple[Locale, ...] = ("zh", "en")
 
 
